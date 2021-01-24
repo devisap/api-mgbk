@@ -16,6 +16,10 @@
 $router->get('/', 'UserController@store');
 
 // user
+// -- GET METHOD --
+$router->get('/user/profile/{id_user}', 'UserController@getProfile');
+// -- POST METHOD
 $router->post('/user/register', 'UserController@register');
 $router->post('/user/login', 'UserController@login');
+$router->post('/user/profile', 'UserController@setProfile');
 
