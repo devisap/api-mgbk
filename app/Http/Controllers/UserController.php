@@ -37,7 +37,7 @@ class UserController extends Controller
         $userPass            = DB::table('users')->select('password')->where('email', $req['email'])->first();
         $isPasswordVerified  = Hash::check($req['password'], $userPass->password);
         if($isPasswordVerified){
-            $user = DB::table('users')->select('id', 'name', 'email')->first();
+            $user = DB::table('users')->select('id', 'name', 'email')->where('email', $req['email'])->first();
             return response()->json(['status' => true, 'message' => 'Data user berhasil ditemukan', 'data' => $user]);
         }else{
             return response()->json(['status' => false, 'message'=> "Email atau password anda salah", 'data' => null ]);
