@@ -13,8 +13,9 @@
 |
 */
 
-$router->get('/', 'UserController@store');
-
+$router->get('/', function () use ($router) {
+    return $router->app->version();
+});
 // user
 // -- GET METHOD --
 $router->get('/user/profile/{id_user}', 'UserController@getProfile');
@@ -22,4 +23,17 @@ $router->get('/user/profile/{id_user}', 'UserController@getProfile');
 $router->post('/user/register', 'UserController@register');
 $router->post('/user/login', 'UserController@login');
 $router->post('/user/profile', 'UserController@setProfile');
+
+// school
+// -- GET METHOD --
+$router->get('/school', 'SchoolController@getList');
+// -- POST METHOD --
+$router->post('/school', 'SchoolController@store');
+
+// activity
+// -- GET METHOD --
+$router->get('/activity', 'ActivityController@getList');
+// -- POST METHOD --
+$router->post('/activity', 'ActivityController@store');
+
 

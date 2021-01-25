@@ -16,12 +16,6 @@ class UserController extends Controller
      * @param  Request  $request
      * @return Response
      */
-    public function store(Request $request)
-    {
-        $data = DB::table('users')->get();
-        return response()->json(['data', $data]);
-    }
-
     public function login(Request $request){
         $req = $request->all();
 
