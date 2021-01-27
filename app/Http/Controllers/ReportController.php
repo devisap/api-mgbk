@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
 
-class SchoolController extends Controller
+class ReportController extends Controller
 {
     /**
      * Store a new user.
@@ -20,7 +20,13 @@ class SchoolController extends Controller
         $req = $request->all();
 
         $validator = Validator::make($req, [
-            'nama_sekolah' => 'required'
+            'id_user'       => 'required|int|exists:users',
+            'id_sekolah'    => 'required|int|exists:sekolah',
+            'id_kegiatan'   => 'required|int|exists:kegiatan',
+            'tgl_transaksi' => 'required|date',
+            'detail'        => 'required',
+            'upload_doc'    => 'required|file|mimes:pdf,png,jpg,bmp|max:2048',
+            'upload_doc'    => 'nullable|file|mimes:pdf,png,jpg,bmp|max:2048'
         ]);
         
         if($validator->fails()){
@@ -28,17 +34,11 @@ class SchoolController extends Controller
         }
 
         // setUp Data
-        $req['is_verified']= '0';
         $req['created_at'] = date('Y-m-d H:i:s');
         $req['updated_at'] = date('Y-m-d H:i:s');
-        DB::table('sekolah')->insert($req);
+        // DB::table('sekolah')->insert($req);
 
         return response()->json(['status' => true, 'message' => 'Data berhasil ditambahkan', 'data' => null]);
-    }
-
-    public function getList(){
-        $listData = DB::table('sekolah')->where('is_verified', '1')->get();
-        return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $listData]);
     }
 
 }

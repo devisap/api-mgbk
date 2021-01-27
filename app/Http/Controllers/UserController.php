@@ -31,7 +31,7 @@ class UserController extends Controller
         $userPass            = DB::table('users')->select('password')->where('email', $req['email'])->first();
         $isPasswordVerified  = Hash::check($req['password'], $userPass->password);
         if($isPasswordVerified){
-            $user = DB::table('users')->select('id', 'name', 'email')->where('email', $req['email'])->first();
+            $user = DB::table('users')->select('id_user', 'name', 'email')->where('email', $req['email'])->first();
             return response()->json(['status' => true, 'message' => 'Data user berhasil ditemukan', 'data' => $user]);
         }else{
             return response()->json(['status' => false, 'message'=> "Email atau password anda salah", 'data' => null ]);
@@ -66,7 +66,7 @@ class UserController extends Controller
         $req = $request->all();
 
         $validator = Validator::make($req, [
-            'id'                    => 'required|int|exists:users',
+            'id_user'                    => 'required|int|exists:users',
             'id_sekolah'            => 'required|int|exists:sekolah',
             'nama_lengkap'          => 'required',
             'foto_profil'           => 'required|file|mimes:jgp,jpeg,bmp,png|dimensions:max_width=512,max_height=512|max:1024',
@@ -81,11 +81,9 @@ class UserController extends Controller
             return response()->json(['status' => false, 'message'=> $validator->errors()->first(), 'data' => null ]);
         }
 
-        $profile = DB::table('profiles')->where('id_user', $req['id'])->first();
+        $profile = DB::table('profiles')->where('id_user', $req['id_user'])->first();
         
         if($profile == null){ // profile isNotFound then insert
-            $req['id_user'] = $req['id'];
-            unset($req['id']);
 
             $imageName = time().'_'.$request->file('foto_profil')->getClientOriginalName();
             $request->file('foto_profil')->move('upload/user/fotoProfil', $imageName);
@@ -103,9 +101,6 @@ class UserController extends Controller
         }else{ // profile isFound then update
             File::delete(public_path('upload/user/fotoProfil/'.$profile->foto_profil));
             File::delete(public_path('upload/user/logoSekolah/'.$profile->logo_sekolah));
-
-            $req['id_user'] = $req['id'];
-            unset($req['id']);
 
             $imageName = time().'_'.$request->file('foto_profil')->getClientOriginalName();
             $request->file('foto_profil')->move('upload/user/fotoProfil', $imageName);
