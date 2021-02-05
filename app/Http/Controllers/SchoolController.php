@@ -37,7 +37,7 @@ class SchoolController extends Controller
     }
 
     public function getList(){
-        $listData = DB::table('sekolah')->where('is_verified', '1')->get();
+        $listData = DB::table('sekolah')->get();
         return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $listData]);
     }
 
