@@ -69,11 +69,11 @@ class UserController extends Controller
             'id_user'                    => 'required|int|exists:users',
             'id_sekolah'            => 'required|int|exists:sekolah',
             'nama_lengkap'          => 'required',
-            'foto_profil'           => 'required|file|mimes:jgp,jpeg,bmp,png|dimensions:max_width=512,max_height=512|max:1024',
+            'foto_profil'           => 'nullable|file|mimes:jgp,jpeg,bmp,png|dimensions:max_width=512,max_height=512|max:1024',
             'alamat_sekolah'        => 'required',
             'nama_kepala_sekolah'   => 'required',
             'tambahan_informasi'    => 'required',
-            'logo_sekolah'          => 'required|file|mimes:jgp,jpeg,bmp,png|dimensions:max_width=512,max_height=512|max:1024'
+            'logo_sekolah'          => 'nullable|file|mimes:jgp,jpeg,bmp,png|dimensions:max_width=512,max_height=512|max:1024'
         ]);
 
         
