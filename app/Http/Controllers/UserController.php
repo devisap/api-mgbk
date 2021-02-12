@@ -99,16 +99,19 @@ class UserController extends Controller
             DB::table('profiles')->insert($req);
             return response()->json(['status' => true, 'message' => 'Data berhasil ditambah', 'data'=> null]);
         }else{ // profile isFound then update
-            File::delete(public_path('upload/user/fotoProfil/'.$profile->foto_profil));
-            File::delete(public_path('upload/user/logoSekolah/'.$profile->logo_sekolah));
+            if($request->filled('foto_profil')){
+                File::delete(public_path('upload/user/fotoProfil/'.$profile->foto_profil));
+                $imageName = time().'_'.$request->file('foto_profil')->getClientOriginalName();
+                $request->file('foto_profil')->move('upload/user/fotoProfil', $imageName);
+                $req['foto_profil'] = $imageName;
+            }
 
-            $imageName = time().'_'.$request->file('foto_profil')->getClientOriginalName();
-            $request->file('foto_profil')->move('upload/user/fotoProfil', $imageName);
-            $req['foto_profil'] = $imageName;
-            
-            $imageName = time().'_'.$request->file('logo_sekolah')->getClientOriginalName();
-            $request->file('logo_sekolah')->move('upload/user/logoSekolah', $imageName);
-            $req['logo_sekolah'] = $imageName;
+            if($request->filled('logo_sekolah')){
+                File::delete(public_path('upload/user/logoSekolah/'.$profile->logo_sekolah));
+                $imageName = time().'_'.$request->file('logo_sekolah')->getClientOriginalName();
+                $request->file('logo_sekolah')->move('upload/user/logoSekolah', $imageName);
+                $req['logo_sekolah'] = $imageName;
+            }
 
             $req['updated_at'] = date('Y-m-d H:i:s');
             
