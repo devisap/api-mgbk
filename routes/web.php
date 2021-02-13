@@ -17,6 +17,12 @@ $router->get('/', function () use ($router) {
     // return $router->app->version();
     return $router->app->version();
 });
+
+// GET GENERATE APP KEY
+$router->get('/key', function () {
+    return \Illuminate\Support\Str::random(32);
+});
+
 // user
 // -- GET METHOD --
 $router->get('/user/profile/{id_user}', 'UserController@getProfile');
@@ -41,5 +47,3 @@ $router->post('/activity', 'ActivityController@store');
 // -- GET METHOD --
 // -- POST METHOD --
 $router->post('/report', 'ReportController@store');
-
-
