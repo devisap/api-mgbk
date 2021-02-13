@@ -89,11 +89,11 @@ class UserController extends Controller
         if ($profile == null) { // profile isNotFound then insert
 
             $imageName = time() . '_' . $request->file('foto_profil')->getClientOriginalName();
-            $request->file('foto_profil')->move('upload/fotoProfil', $imageName);
+            $request->file('foto_profil')->move('upload/tes/fotoProfil', $imageName);
             $req['foto_profil'] = $imageName;
 
             $imageName = time() . '_' . $request->file('logo_sekolah')->getClientOriginalName();
-            $request->file('logo_sekolah')->move('upload/logoSekolah', $imageName);
+            $request->file('logo_sekolah')->move('upload/tes/logoSekolah', $imageName);
             $req['logo_sekolah'] = $imageName;
 
             $req['created_at'] = date('Y-m-d H:i:s');
