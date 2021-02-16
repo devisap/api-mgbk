@@ -11,12 +11,13 @@ use Illuminate\Support\Facades\File;
 class ReportController extends Controller
 {
     /**
-     * Store a new user.
+     * Store a new report.
      *
      * @param  Request  $request
      * @return Response
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $req = $request->all();
 
         $validator = Validator::make($req, [
@@ -25,20 +26,60 @@ class ReportController extends Controller
             'id_kegiatan'   => 'required|int|exists:kegiatan',
             'tgl_transaksi' => 'required|date',
             'detail'        => 'required',
-            'upload_doc'    => 'required|file|mimes:pdf,png,jpg,bmp|max:2048',
-            'upload_doc'    => 'nullable|file|mimes:pdf,png,jpg,bmp|max:2048'
+            'upload_doc_1'  => 'required|file|mimes:pdf,png,jpg,bmp|max:2048',
+            'upload_doc_2'  => 'nullable|file|mimes:pdf,png,jpg,bmp|max:2048',
+            'upload_doc_3'  => 'nullable|file|mimes:pdf,png,jpg,bmp|max:2048',
         ]);
-        
-        if($validator->fails()){
+
+        if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
+        }
+
+        if ($request->hasFile('upload_doc_1')) {
+            $nama_doc_1 = time() . '_' . $request->file('upload_doc_1')->getClientOriginalName();
+
+            $request->file('upload_doc_1')->move('upload/doc_1/' . $request->id_user, $nama_doc_1);
+            $req['upload_doc_1'] = $nama_doc_1;
+        }
+
+        if ($request->hasFile('upload_doc_2')) {
+            $nama_doc_2 = time() . '_' . $request->file('upload_doc_2')->getClientOriginalName();
+            $request->file('upload_doc_2')->move('upload/doc_2/' . $request->id_user, $nama_doc_2);
+            $req['upload_doc_2'] = $nama_doc_2;
+        }
+
+        if ($request->hasFile('upload_doc_3')) {
+            $nama_doc_3 = time() . '_' . $request->file('upload_doc_3')->getClientOriginalName();
+            $request->file('upload_doc_3')->move('upload/doc_3/' . $request->id_user, $nama_doc_3);
+            $req['upload_doc_3'] = $nama_doc_3;
         }
 
         // setUp Data
         $req['created_at'] = date('Y-m-d H:i:s');
         $req['updated_at'] = date('Y-m-d H:i:s');
-        // DB::table('sekolah')->insert($req);
+        DB::table('laporan')->insert($req);
 
         return response()->json(['status' => true, 'message' => 'Data berhasil ditambahkan', 'data' => null]);
     }
 
+    public function getReportByDate($tgl, $id_sekolah, $id_user)
+    {
+        $req['tgl_transaksi']   = $tgl;
+        $req['id_sekolah']      = $id_sekolah;
+        $req['id_user']         = $id_user;
+
+        // $validator = Validator::make($req, [
+        //     'tgl_transaksi' => 'required|date',
+        //     'id_sekolah'    => 'required|int|exists:sekolah',
+        //     'id_user'       => 'required|int|exists:users',
+        // ]);
+
+        // if ($validator->fails()) {
+        //     return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
+        // }
+
+        // $laporan = DB::table('laporan')->where('id_user', $id_user)->where('id_sekolah', $id_sekolah)->where('tgl_transaksi', $tgl)->get();
+        // return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $laporan]);
+        return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $req]);
+    }
 }
