@@ -62,24 +62,23 @@ class ReportController extends Controller
         return response()->json(['status' => true, 'message' => 'Data berhasil ditambahkan', 'data' => null]);
     }
 
-    public function getReportByDate($tgl, $id_sekolah, $id_user)
+    public function getReportByDate(Request $request, $tanggal)
     {
-        $req['tgl_transaksi']   = $tgl;
-        $req['id_sekolah']      = $id_sekolah;
-        $req['id_user']         = $id_user;
+        $req['tgl_transaksi']   = $tanggal;
+        $req['id_sekolah']      = $request->id_sekolah;
+        $req['id_user']         = $request->id_user;
 
-        // $validator = Validator::make($req, [
-        //     'tgl_transaksi' => 'required|date',
-        //     'id_sekolah'    => 'required|int|exists:sekolah',
-        //     'id_user'       => 'required|int|exists:users',
-        // ]);
+        $validator = Validator::make($req, [
+            'tgl_transaksi' => 'required|date',
+            'id_sekolah'    => 'required|int|exists:sekolah',
+            'id_user'       => 'required|int|exists:users',
+        ]);
 
-        // if ($validator->fails()) {
-        //     return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
-        // }
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
+        }
 
-        // $laporan = DB::table('laporan')->where('id_user', $id_user)->where('id_sekolah', $id_sekolah)->where('tgl_transaksi', $tgl)->get();
-        // return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $laporan]);
-        return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $req]);
+        $laporan = DB::table('laporan')->where('id_user', $req['id_user'])->where('id_sekolah', $req['id_sekolah'])->where('tgl_transaksi', $req['tgl_transaksi'])->get();
+        return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $laporan]);
     }
 }

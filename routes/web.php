@@ -45,6 +45,6 @@ $router->post('/activity', 'ActivityController@store');
 
 // report
 // -- GET METHOD --
-$router->get('/report/by-date/{date}/{sekolah}/{user}', 'ReportController@getReportByDate');
+$router->get('/report/by-date/{tanggal}', 'ReportController@getReportByDate');
 // -- POST METHOD --
 $router->post('/report', 'ReportController@store');
