@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
+use PDF;
 
 class ReportController extends Controller
 {
@@ -78,7 +79,43 @@ class ReportController extends Controller
             return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
         }
 
-        $laporan = DB::table('laporan')->where('id_user', $req['id_user'])->where('id_sekolah', $req['id_sekolah'])->where('tgl_transaksi', $req['tgl_transaksi'])->get();
-        return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $laporan]);
+        $reports = DB::table('laporan')->where('id_user', $req['id_user'])->where('id_sekolah', $req['id_sekolah'])->where('tgl_transaksi', $req['tgl_transaksi'])->get();
+        return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $reports]);
+    }
+
+    public function printReportByDate(Request $request, $tanggal)
+    {
+        $req['tgl_transaksi']   = $tanggal;
+        $req['id_sekolah']      = $request->id_sekolah;
+        $req['id_user']         = $request->id_user;
+
+        $validator = Validator::make($req, [
+            'tgl_transaksi' => 'required|date',
+            'id_sekolah'    => 'required|int|exists:sekolah',
+            'id_user'       => 'required|int|exists:users',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
+        }
+
+        $reports = DB::table('laporan')
+            ->leftJoin('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
+            ->leftJoin('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
+            ->leftJoin('profiles', 'laporan.id_user', '=', 'profiles.id_user')
+            ->select('laporan.*', 'kegiatan.*', 'sekolah.nama_sekolah', 'profiles.nama_lengkap')
+            ->where('laporan.id_user', $req['id_user'])
+            ->where('laporan.id_sekolah', $req['id_sekolah'])
+            ->where('laporan.tgl_transaksi', $req['tgl_transaksi'])
+            ->get();
+
+        // return view('print.laporan.harian', compact('reports'));
+        // $pdf = app()->make('dompdf.wrapper');
+        $pdf = PDF::loadView('print.laporan.harian', compact('reports'));
+        $pdf->setPaper('legal', 'potrait');
+        return $pdf->stream();
+        // return $pdf->download('laporan-harian.pdf');
+
+        // return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $laporan]);
     }
 }
