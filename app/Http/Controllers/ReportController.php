@@ -79,7 +79,7 @@ class ReportController extends Controller
             return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
         }
 
-        $reports = DB::table('laporan')->where('id_user', $req['id_user'])->where('id_sekolah', $req['id_sekolah'])->where('tgl_transaksi', $req['tgl_transaksi'])->get();
+        $reports = DB::table('v_laporan')->where('id_user', $req['id_user'])->where('id_sekolah', $req['id_sekolah'])->where('tgl_transaksi', $req['tgl_transaksi'])->get();
         return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $reports]);
     }
 
