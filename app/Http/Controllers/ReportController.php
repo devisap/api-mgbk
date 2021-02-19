@@ -83,7 +83,7 @@ class ReportController extends Controller
         if($reports != null){
             return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $reports]);    
         }else{
-            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []);    
+            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);    
         }
     }
 
