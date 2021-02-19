@@ -80,12 +80,11 @@ class ReportController extends Controller
         }
 
         $reports = DB::table('v_laporan')->where('id_user', $req['id_user'])->where('id_sekolah', $req['id_sekolah'])->where('tgl_transaksi', $req['tgl_transaksi'])->get();
-        return response()->json(['status' => true, 'message' => 'Data  ditemukan', 'data' => $reports]);    
-        // if($reports != null){
-        //     return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $reports]);    
-        // }else{
-        //     return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);    
-        // }
+        if($reports != null){
+            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $reports]);    
+        }else{
+            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);    
+        }
     }
 
     public function printReportByDate(Request $request, $tanggal)
