@@ -117,8 +117,8 @@ class ReportController extends Controller
         // $pdf = app()->make('dompdf.wrapper');
         $pdf = PDF::loadView('print.laporan.harian', compact('reports'));
         $pdf->setPaper('legal', 'potrait');
-        return $pdf->stream();
-        // return $pdf->download('laporan-harian.pdf');
+        //return $pdf->stream();
+        return $pdf->download('laporan-harian.pdf');
 
         // return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $laporan]);
     }
