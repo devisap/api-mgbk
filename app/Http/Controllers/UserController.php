@@ -136,7 +136,7 @@ class UserController extends Controller
             return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
         }
 
-        $profile = DB::table('profiles')->where($req)->first();
+        $profile = DB::table('v_profiles')->where($req)->first();
         return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $profile]);
     }
 }
