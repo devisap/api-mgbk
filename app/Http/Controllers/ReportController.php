@@ -103,6 +103,14 @@ class ReportController extends Controller
             return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
         }
 
+        $user           = DB::table('v_profiles')->where('id_user', $req['id_user'])->first();
+        $filePath       = public_path().'/laporan/'.$user->name.'/harian';
+        $fullFilePath   = public_path().'/laporan/'.$user->name.'/harian/LaporanHarian_'.$user->nama_lengkap.'_'.$req['tgl_transaksi'].'.pdf';
+        $isExist        = File::exists($filePath);
+        if($isExist == false){
+            File::makeDirectory($filePath, 0777, true, true);
+        }
+
         $reports = DB::table('laporan')
             ->leftJoin('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
             ->leftJoin('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
@@ -117,9 +125,10 @@ class ReportController extends Controller
         // $pdf = app()->make('dompdf.wrapper');
         $pdf = PDF::loadView('print.laporan.harian', compact('reports'));
         $pdf->setPaper('legal', 'potrait');
-        return $pdf->stream();
+        $pdf->save($fullFilePath);
+        return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
+        // return $pdf->stream();
         //return $pdf->download('laporan-harian.pdf');
 
-        // return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $laporan]);
     }
 }
