@@ -104,8 +104,8 @@ class ReportController extends Controller
         }
 
         $user           = DB::table('v_profiles')->where('id_user', $req['id_user'])->first();
-        $filePath       = public_path().'/laporan/'.$user->name.'/harian';
-        $fullFilePath   = public_path().'/laporan/'.$user->name.'/harian/LaporanHarian_'.$user->nama_lengkap.'_'.$req['tgl_transaksi'].'.pdf';
+        $filePath       = 'laporan/'.$user->name.'/harian';
+        $fullFilePath   = 'laporan/'.$user->name.'/harian/LaporanHarian_'.$user->nama_lengkap.'_'.$req['tgl_transaksi'].'.pdf';
         $isExist        = File::exists($filePath);
         if($isExist == false){
             File::makeDirectory($filePath, 0777, true, true);
