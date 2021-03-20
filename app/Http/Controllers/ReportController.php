@@ -129,7 +129,7 @@ class ReportController extends Controller
         //     ->where('laporan.tgl_transaksi', $req['tgl_transaksi'])
         //     ->get();
 
-        $reports = DB::table('laporan')
+        $laporan = DB::table('laporan')
             ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
             ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
             ->Join('users', 'laporan.id_user', '=', 'users.id_user')
@@ -138,8 +138,8 @@ class ReportController extends Controller
             ->where('profiles.id_user', $req['id_user'])
             ->where('laporan.id_user', $req['id_user'])
             ->where('laporan.id_sekolah', $req['id_sekolah']);
-        $reports->where('laporan.tgl_transaksi', $req['tgl_transaksi']);
-        $reports->get();
+        $laporan->where('laporan.tgl_transaksi', $req['tgl_transaksi']);
+        $reports = $laporan->get();
 
         // return view('print.laporan.harian', compact('reports'));
         // $pdf = app()->make('dompdf.wrapper');
@@ -182,7 +182,7 @@ class ReportController extends Controller
         $tgl_awal  = date('Y-m-d', strtotime($week->start_date));
         $tgl_akhir = date('Y-m-d', strtotime($week->end_date));
 
-        $reports = DB::table('laporan')
+        $laporan = DB::table('laporan')
             ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
             ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
             ->Join('users', 'laporan.id_user', '=', 'users.id_user')
@@ -191,8 +191,8 @@ class ReportController extends Controller
             ->where('profiles.id_user', $req['id_user'])
             ->where('laporan.id_user', $req['id_user'])
             ->where('laporan.id_sekolah', $req['id_sekolah']);
-        $reports->whereBetween('tgl_transaksi', [$tgl_awal, $tgl_akhir]);
-        $reports->get();
+        $laporan->whereBetween('tgl_transaksi', [$tgl_awal, $tgl_akhir]);
+        $reports = $laporan->get();
 
         $pdf = PDF::loadView('print.laporan.mingguan', compact('reports', 'user'));
         $pdf->setPaper('legal', 'potrait');
@@ -222,7 +222,7 @@ class ReportController extends Controller
             File::makeDirectory($filePath, 0777, true, true);
         }
 
-        $reports = DB::table('laporan')
+        $laporan = DB::table('laporan')
             ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
             ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
             ->Join('users', 'laporan.id_user', '=', 'users.id_user')
@@ -231,9 +231,9 @@ class ReportController extends Controller
             ->where('profiles.id_user', $req['id_user'])
             ->where('laporan.id_user', $req['id_user'])
             ->where('laporan.id_sekolah', $req['id_sekolah']);
-        $reports->whereYear('tgl_transaksi', $request->year);
-        $reports->whereMonth('tgl_transaksi', $request->month);
-        $reports->get();
+        $laporan->whereYear('tgl_transaksi', $request->year);
+        $laporan->whereMonth('tgl_transaksi', $request->month);
+        $reports = $laporan->get();
 
         $pdf = PDF::loadView('print.laporan.bulanan', compact('reports', 'user'));
         $pdf->setPaper('legal', 'potrait');
@@ -271,7 +271,7 @@ class ReportController extends Controller
             $end_date    =  date('Y-m-d', strtotime($request->year . "-12-31"));
         }
 
-        $reports = DB::table('laporan')
+        $laporan = DB::table('laporan')
             ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
             ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
             ->Join('users', 'laporan.id_user', '=', 'users.id_user')
@@ -280,9 +280,9 @@ class ReportController extends Controller
             ->where('profiles.id_user', $req['id_user'])
             ->where('laporan.id_user', $req['id_user'])
             ->where('laporan.id_sekolah', $req['id_sekolah']);
-        $reports->whereYear('tgl_transaksi', $request->year);
-        $reports->whereBetween('tgl_transaksi', [$start_date, $end_date]);
-        $reports->get();
+        $laporan->whereYear('tgl_transaksi', $request->year);
+        $laporan->whereBetween('tgl_transaksi', [$start_date, $end_date]);
+        $reports = $laporan->get();
 
         $pdf = PDF::loadView('print.laporan.semesteran', compact('reports', 'user'));
         $pdf->setPaper('legal', 'potrait');
@@ -312,7 +312,7 @@ class ReportController extends Controller
             File::makeDirectory($filePath, 0777, true, true);
         }
 
-        $reports = DB::table('laporan')
+        $laporan = DB::table('laporan')
             ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
             ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
             ->Join('users', 'laporan.id_user', '=', 'users.id_user')
@@ -321,8 +321,8 @@ class ReportController extends Controller
             ->where('profiles.id_user', $req['id_user'])
             ->where('laporan.id_user', $req['id_user'])
             ->where('laporan.id_sekolah', $req['id_sekolah']);
-        $reports->whereYear('tgl_transaksi', $request->year);
-        $reports->get();
+        $laporan->whereYear('tgl_transaksi', $request->year);
+        $reports = $laporan->get();
 
         $pdf = PDF::loadView('print.laporan.tahunan', compact('reports', 'user'));
         $pdf->setPaper('legal', 'potrait');
