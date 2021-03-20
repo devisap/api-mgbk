@@ -64,9 +64,9 @@
                 <img src="{{ public_path('upload/logoSekolah/'.$logo_sekolah) }}" width="80" height="80">
             </th>
             <th>
-                <span class="text-title">{{ $guru->nama_sekolah }}</span><br>
-                <span class="text-regular">{{ $guru->alamat_sekolah }}</span><br>
-                <span class="text-regular">{{ $guru->tambahan_informasi }}</span><br>
+                <span class="text-title">{{ $user->nama_sekolah }}</span><br>
+                <span class="text-regular">{{ $user->alamat_sekolah }}</span><br>
+                <span class="text-regular">{{ $user->tambahan_informasi }}</span><br>
                 {{-- <span class="text-regular">Website: https://sman6malang.sch.id; E-mail: kontak@sman6malang.sch.id</span><br> --}}
             </th>
         </tr>

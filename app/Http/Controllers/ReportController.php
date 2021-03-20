@@ -139,9 +139,12 @@ class ReportController extends Controller
             ->where('laporan.id_user', $req['id_user'])
             ->where('laporan.id_sekolah', $req['id_sekolah']);
         $reports->where('laporan.tgl_transaksi', $req['tgl_transaksi']);
+        $reports->get();
 
         // return view('print.laporan.harian', compact('reports'));
         // $pdf = app()->make('dompdf.wrapper');
+        dd($reports);
+
         $pdf = PDF::loadView('print.laporan.harian', compact('reports', 'user'));
         $pdf->setPaper('legal', 'potrait');
         $pdf->save($fullFilePath);
@@ -189,6 +192,7 @@ class ReportController extends Controller
             ->where('laporan.id_user', $req['id_user'])
             ->where('laporan.id_sekolah', $req['id_sekolah']);
         $reports->whereBetween('tgl_transaksi', [$tgl_awal, $tgl_akhir]);
+        $reports->get();
 
         $pdf = PDF::loadView('print.laporan.mingguan', compact('reports', 'user'));
         $pdf->setPaper('legal', 'potrait');
@@ -229,6 +233,7 @@ class ReportController extends Controller
             ->where('laporan.id_sekolah', $req['id_sekolah']);
         $reports->whereYear('tgl_transaksi', $request->year);
         $reports->whereMonth('tgl_transaksi', $request->month);
+        $reports->get();
 
         $pdf = PDF::loadView('print.laporan.bulanan', compact('reports', 'user'));
         $pdf->setPaper('legal', 'potrait');
@@ -277,6 +282,7 @@ class ReportController extends Controller
             ->where('laporan.id_sekolah', $req['id_sekolah']);
         $reports->whereYear('tgl_transaksi', $request->year);
         $reports->whereBetween('tgl_transaksi', [$start_date, $end_date]);
+        $reports->get();
 
         $pdf = PDF::loadView('print.laporan.semesteran', compact('reports', 'user'));
         $pdf->setPaper('legal', 'potrait');
@@ -316,6 +322,7 @@ class ReportController extends Controller
             ->where('laporan.id_user', $req['id_user'])
             ->where('laporan.id_sekolah', $req['id_sekolah']);
         $reports->whereYear('tgl_transaksi', $request->year);
+        $reports->get();
 
         $pdf = PDF::loadView('print.laporan.tahunan', compact('reports', 'user'));
         $pdf->setPaper('legal', 'potrait');
