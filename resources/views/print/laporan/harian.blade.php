@@ -1,86 +1,159 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <!-- Required meta tags -->
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <!-- Bootstrap CSS -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Harian MGBK SMA Kota Malang</title>
+    <style>
+        .w-100 {
+            width: 100%;
+        }
 
-        <title>Laporan Harian MGBK</title>
-        <style type="text/css">
-            /* * {
-                font-family: Verdana, Arial, sans-serif;
-            } */
-            
-            table{
-                width:100%;
-                font-size: x-small;
-            }
-            tfoot tr td{
-                font-weight: bold;
-                font-size: x-small;
-            }
-            table th,
-            table td {
-                vertical-align: top;
-                padding: 5px;
-            /* Apply cell padding */
-            }
-            .gray {
-                background-color: lightgray
-            }
-            
-        </style>
-    </head>
-    <body>
-        <h3 class="card-title">list laporan harian</h3>
-    
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                <th scope="col">No</th>
-                <th scope="col">Nama lengkap</th>
-                <th scope="col">Nama sekolah</th>
-                <th scope="col">Tanggal kegiatan</th>
-                <th scope="col">Kegiatan</th>
-                <th scope="col">Sasaran kegiatan</th>
-                <th scope="col">Satuan kegiatan</th>
-                <th scope="col">Uraian</th>
-                <th scope="col">Pelaporan</th>
-                <th scope="col">Durasi</th>
-                <th scope="col">Satuan waktu</th>
-                </tr>
-            </thead>
-            <tbody>
+        .p-min {
+            padding: .2em;
+        }
 
-                @if (count($reports) == 0)
-                    <tr>
-                        <td>No data found</td>
-                    </tr>
-                @else
+        .valign-middle {
+            vertical-align: middle;
+        }
 
-                    @foreach($reports as $report)
-                    <tr>
-                        <th scope="row">{{ $loop->iteration }}</th>
-                        <td>{{ $report->nama_lengkap }}</td>
-                        <td>{{ $report->nama_sekolah }}</td>
-                        <td>{{ $report->tgl_transaksi }}</td>
-                        <td>{{ $report->kegiatan }}</td>
-                        <td>{{ $report->sasaran_kegiatan }}</td>
-                        <td>{{ $report->satuan_kegiatan }}</td>
-                        <td>{{ $report->uraian }}</td>
-                        <td>{{ $report->pelaporan }}</td>
-                        <td>{{ $report->durasi }}</td>
-                        <td>{{ $report->satuan_waktu }}</td>
-                    </tr>
-                    @endforeach
-                    
-                @endif
+        .p-max {
+            padding: 2em;
+        }
 
-            </tbody>
-        </table>
+        .mb-max {
+            margin-bottom: 3em;
+        }
 
-    </body>
+        .border-collapse {
+            border-collapse: collapse;
+        }
+
+        .border {
+            border: 1px solid black;
+        }
+
+        .border-right {
+            border-right: 1px solid black;
+        }
+
+        .border-bottom {
+            border-bottom: 1px solid black;
+        }
+
+        .text-title {
+            font-size: 24px;
+        }
+
+        .text-regular {
+            font-weight: 400;
+        }
+
+        .text-align-left {
+            text-align: left;
+        }
+
+        .text-align-center {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <table class="border w-100 p-max mb-max valign-middle">
+        <tr>
+            <th>
+                <img src="{{ public_path('upload/logoSekolah/'.$user->logo_sekolah) }}" width="80" height="80">
+            </th>
+            <th>
+                <span class="text-title">{{ $user->nama_sekolah }}</span><br>
+                <span class="text-regular">{{ $user->alamat_sekolah }}</span><br>
+                <span class="text-regular">{{ $user->tambahan_informasi }}</span><br>
+            </th>
+        </tr>
+    </table>
+
+    @php
+
+    function tgl_indo($tanggal){
+    $bulan = array (
+    1 => 'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember'
+    );
+    $pecahkan = explode('-', $tanggal);
+
+    return $pecahkan[2] . ' ' . $bulan[ (int)$pecahkan[1] ] . ' ' . $pecahkan[0];
+    }
+
+    $tgl = tgl_indo($reports[0]->tgl_transaksi);
+
+    @endphp
+
+    <table class="mb-max">
+        <tr>
+            <th class="text-align-left">
+                Nama Guru
+            </th>
+            <td>
+                : {{ $user->nama_lengkap }}
+            </td>
+        </tr>
+        <tr>
+            <th class="text-align-left">
+                Kelas yang diampuh
+            </th>
+            <td>
+                : {{ $user->kelas_pengampu }}
+            </td>
+        </tr>
+        <tr>
+            <th class="text-align-left">
+                Tanggal laporan
+            </th>
+            <td>
+                : {{ $tgl }}
+            </td>
+        </tr>
+    </table>
+
+    <p>
+        Berikut detail laporan dari Guru BK yang bersangkutan :
+    </p>
+
+    <table class="border w-100 border-collapse">
+        <tr>
+            <th style="width: 10px;" class="text-align-center border-right border-bottom p-min">No</th>
+            <th style="width: 40%;" class="border-right border-bottom p-min">Jenis Kegiatan</th>
+            <th class="border-bottom p-min">Detail</th>
+        </tr>
+        @if (count($reports) == 0)
+        <tr>
+            <td colspan="3" class="text-align-center">Data tidak ada.</td>
+        </tr>
+        @else
+
+        @foreach($reports as $report)
+        <tr>
+            <td class="text-align-left border-right border-bottom p-min">{{ $loop->iteration }}</td>
+            <td class="text-align-left border-right border-bottom p-min">{{ $report->kegiatan }}</td>
+            <td class="text-align-left border-right border-bottom p-min">{{ $report->detail }}</td>
+        </tr>
+        @endforeach
+
+        @endif
+    </table>
+</body>
+
 </html>
