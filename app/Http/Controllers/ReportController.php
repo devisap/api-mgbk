@@ -141,17 +141,16 @@ class ReportController extends Controller
         $laporan->where('laporan.tgl_transaksi', $req['tgl_transaksi']);
         $reports = $laporan->get();
 
-        // return view('print.laporan.harian', compact('reports'));
+        // return view('print.laporan.laporan_harian', compact('reports', 'user'));
         // $pdf = app()->make('dompdf.wrapper');
-        dd($reports);
+        // dd($reports);
 
-        $pdf = PDF::loadView('print.laporan.harian', compact('reports', 'user'));
+        $pdf = PDF::loadView('print.laporan.laporan_harian', compact('reports', 'user'));
         $pdf->setPaper('legal', 'potrait');
         $pdf->save($fullFilePath);
         return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
         // return $pdf->stream();
-        //return $pdf->download('laporan-harian.pdf');
-
+        // return $pdf->download('laporan-harian.pdf');
     }
 
     public function printReportByWeek(Request $request)

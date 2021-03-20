@@ -61,7 +61,7 @@
     <table class="border w-100 p-max mb-max valign-middle">
         <tr>
             <th>
-                <img src="{{ public_path('upload/logoSekolah/'.$logo_sekolah) }}" width="80" height="80">
+                <img src="{{ public_path('upload/logoSekolah/'.$user->logo_sekolah) }}" width="80" height="80">
             </th>
             <th>
                 <span class="text-title">{{ $user->nama_sekolah }}</span><br>
@@ -74,24 +74,27 @@
     @php
         
         function tgl_indo($tanggal){
-        $bulan = array (
-            1 =>   'Januari',
-            'Februari',
-            'Maret',
-            'April',
-            'Mei',
-            'Juni',
-            'Juli',
-            'Agustus',
-            'September',
-            'Oktober',
-            'November',
-            'Desember'
-        );
-        $pecahkan = explode('-', $tanggal);
-        
-        return $pecahkan[2] . ' ' . $bulan[ (int)$pecahkan[1] ] . ' ' . $pecahkan[0];
-    }
+            $bulan = array (
+                1 =>   'Januari',
+                'Februari',
+                'Maret',
+                'April',
+                'Mei',
+                'Juni',
+                'Juli',
+                'Agustus',
+                'September',
+                'Oktober',
+                'November',
+                'Desember'
+            );
+            $pecahkan = explode('-', $tanggal);
+            
+            return $pecahkan[2] . ' ' . $bulan[ (int)$pecahkan[1] ] . ' ' . $pecahkan[0];
+        }
+
+    $tgl = tgl_indo($reports[0]->tgl_transaksi);
+
     @endphp
     <table class="mb-max">
         <tr>
@@ -117,7 +120,7 @@
                 Tanggal laporan
             </th>
             <td>
-                : {{ tgl_indo($reports[0]->tgl_transaksi) }}
+                : {{ $tgl }}
             </td>
         </tr>
     </table>
