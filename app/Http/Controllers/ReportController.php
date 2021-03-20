@@ -193,6 +193,8 @@ class ReportController extends Controller
         $laporan->whereBetween('tgl_transaksi', [$tgl_awal, $tgl_akhir]);
         $reports = $laporan->get();
 
+        // return view('print.laporan.mingguan', compact('reports', 'user'));
+
         $pdf = PDF::loadView('print.laporan.mingguan', compact('reports', 'user'));
         $pdf->setPaper('legal', 'potrait');
         $pdf->save($fullFilePath);
