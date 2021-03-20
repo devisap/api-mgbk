@@ -134,9 +134,9 @@
 
     <table class="border w-100 border-collapse">
         <tr>
-            <th style="width: 10px;" class="text-align-center border-right border-bottom p-min">No</th>
-            <th style="width: 15%;" class="border-right border-bottom p-min">Tanggal</th>
-            <th style="width: 25%;" class="border-right border-bottom p-min">Jenis Kegiatan</th>
+            <th style="width: 10px;" class="border-right border-bottom p-min">No</th>
+            <th style="width: 20%;" class="border-right border-bottom p-min">Tanggal</th>
+            <th style="width: 30%;" class="border-right border-bottom p-min">Jenis Kegiatan</th>
             <th class="border-bottom p-min">Detail</th>
         </tr>
         @if (count($reports) == 0)
@@ -147,8 +147,8 @@
 
         @foreach($reports as $report)
         <tr>
-            <td class="text-align-left border-right border-bottom p-min">{{ $loop->iteration }}</td>
-            <td class="text-align-left border-right border-bottom p-min">{{ $report->tanggal }}</td>
+            <td class="text-align-center border-right border-bottom p-min">{{ $loop->iteration }}</td>
+            <td class="text-align-center border-right border-bottom p-min">{{ $report->tgl_transaksi }}</td>
             <td class="text-align-left border-right border-bottom p-min">{{ $report->kegiatan }}</td>
             <td class="text-align-left border-right border-bottom p-min">{{ $report->detail }}</td>
         </tr>
