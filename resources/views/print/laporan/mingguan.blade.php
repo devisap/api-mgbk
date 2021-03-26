@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Harian</title>
+    <title>Laporan Mingguan MGBK SMA Kota Malang</title>
     <style>
         .w-100 {
-            min-width: 100vw;
+            width: 100%;
         }
 
         .p-min {
@@ -54,6 +54,10 @@
         .text-align-left {
             text-align: left;
         }
+
+        .text-align-center {
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -67,42 +71,42 @@
                 <span class="text-title">{{ $user->nama_sekolah }}</span><br>
                 <span class="text-regular">{{ $user->alamat_sekolah }}</span><br>
                 <span class="text-regular">{{ $user->tambahan_informasi }}</span><br>
-                {{-- <span class="text-regular">Website: https://sman6malang.sch.id; E-mail: kontak@sman6malang.sch.id</span><br> --}}
             </th>
         </tr>
     </table>
-    @php
-        
-        function tgl_indo($tanggal){
-            $bulan = array (
-                1 =>   'Januari',
-                'Februari',
-                'Maret',
-                'April',
-                'Mei',
-                'Juni',
-                'Juli',
-                'Agustus',
-                'September',
-                'Oktober',
-                'November',
-                'Desember'
-            );
-            $pecahkan = explode('-', $tanggal);
-            
-            return $pecahkan[2] . ' ' . $bulan[ (int)$pecahkan[1] ] . ' ' . $pecahkan[0];
-        }
+
+@php
+
+    function tgl_indo($tanggal){
+        $bulan = array (
+        1 => 'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember'
+        );
+        $pecahkan = explode('-', $tanggal);
+
+        return $pecahkan[2] . ' ' . $bulan[ (int)$pecahkan[1] ] . ' ' . $pecahkan[0];
+    }
 
     $tgl = tgl_indo($reports[0]->tgl_transaksi);
 
-    @endphp
+@endphp
+
     <table class="mb-max">
         <tr>
             <th class="text-align-left">
                 Nama Guru
             </th>
             <td>
-                {{-- : {{ $guru->profile->nama_lengkap }} --}}
                 : {{ $user->nama_lengkap }}
             </td>
         </tr>
@@ -111,16 +115,15 @@
                 Kelas yang diampuh
             </th>
             <td>
-                {{-- : {{ $guru->profile->kelas_pengampu }} --}}
                 : {{ $user->kelas_pengampu }}
             </td>
         </tr>
         <tr>
             <th class="text-align-left">
-                Tanggal laporan
+                Minggu ke
             </th>
             <td>
-                : {{ $tgl }}
+                : {{ $week->week }}
             </td>
         </tr>
     </table>
@@ -128,29 +131,30 @@
     <p>
         Berikut detail laporan dari Guru BK yang bersangkutan :
     </p>
-    <table class="border w-100 border-collapse">
 
+    <table class="border w-100 border-collapse">
         <tr>
-            <th class="text-align-left border-right border-bottom p-min">No</th>
-            <th class="border-right border-bottom p-min">Jenis Kegiatan</th>
+            <th style="width: 10px;" class="border-right border-bottom p-min">No</th>
+            <th style="width: 20%;" class="border-right border-bottom p-min">Tanggal</th>
+            <th style="width: 30%;" class="border-right border-bottom p-min">Jenis Kegiatan</th>
             <th class="border-bottom p-min">Detail</th>
         </tr>
-
         @if (count($reports) == 0)
-            <tr>
-                <td>No data found</td>
-            </tr>
+        <tr>
+            <td colspan="4" class="text-align-center">Data tidak ada.</td>
+        </tr>
         @else
-            @foreach($reports as $report)
-            <tr>
-                <td class="text-align-left border-right border-bottom p-min">{{ $loop->iteration }}</td>
-                {{-- <td class="text-align-left border-right border-bottom p-min">{{ $report->kegiatan->kegiatan }}</td> --}}
-                <td class="text-align-left border-right border-bottom p-min">{{ $report->kegiatan }}</td>
-                <td class="text-align-left border-right border-bottom p-min">{{ $report->detail }}</td>
-            </tr>
-            @endforeach
-        @endif
 
+        @foreach($reports as $report)
+        <tr>
+            <td class="text-align-center border-right border-bottom p-min">{{ $loop->iteration }}</td>
+            <td class="text-align-center border-right border-bottom p-min">{{ tgl_indo($report->tgl_transaksi) }}</td>
+            <td class="text-align-left border-right border-bottom p-min">{{ $report->kegiatan }}</td>
+            <td class="text-align-left border-right border-bottom p-min">{{ $report->detail }}</td>
+        </tr>
+        @endforeach
+
+        @endif
     </table>
 </body>
 
