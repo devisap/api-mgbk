@@ -56,3 +56,6 @@ $router->get('/print-report/by-semester', 'ReportController@printReportBySemeste
 $router->get('/print-report/by-year', 'ReportController@printReportByYear');
 // -- POST METHOD --
 $router->post('/report', 'ReportController@store');
+
+// Data Master
+$router->get('data-master/getYears', 'DataMasterController@getYears');
