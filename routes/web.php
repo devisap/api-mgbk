@@ -43,12 +43,17 @@ $router->get('/activity', 'ActivityController@getList');
 // -- POST METHOD --
 $router->post('/activity', 'ActivityController@store');
 
-// report
-// -- GET METHOD --
 
 $router->get('report/load-weeks', 'ReportController@loadWeeks');
 
+// -- Report -- //
 $router->get('/report/by-date/{tanggal}', 'ReportController@getReportByDate');
+$router->get('/report/by-week', 'ReportController@getReportByWeek');
+$router->get('/report/by-month', 'ReportController@getReportByMonth');
+$router->get('/report/by-semester', 'ReportController@getReportBySemester');
+$router->get('/report/by-year', 'ReportController@getReportByYear');
+
+// -- Print Rport -- //
 $router->get('/print-report/by-date/{tanggal}', 'ReportController@printReportByDate');
 $router->get('/print-report/by-week', 'ReportController@printReportByWeek');
 $router->get('/print-report/by-month', 'ReportController@printReportByMonth');
