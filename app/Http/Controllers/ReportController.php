@@ -152,7 +152,65 @@ class ReportController extends Controller
         // return $pdf->stream();
         // return $pdf->download('laporan-harian.pdf');
     }
+    public function getReportByMonth(Request $request)
+    {
+        $req['id_sekolah']      = $request->id_sekolah;
+        $req['id_user']         = $request->id_user;
 
+        $validator = Validator::make($req, [
+            'id_sekolah'    => 'required|int|exists:sekolah',
+            'id_user'       => 'required|int|exists:users',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
+        }
+
+        $laporan = DB::table('laporan')
+            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
+            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
+            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
+            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
+            ->select(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+                DB::raw('COUNT(laporan.id_laporan) as jumlah_kegiatan'),
+                DB::raw('SUM(ekuivalen) as jumlah_ekuivalen')
+            )
+            ->where('profiles.id_user', $req['id_user'])
+            ->where('laporan.id_user', $req['id_user'])
+            ->where('laporan.id_sekolah', $req['id_sekolah'])
+            ->groupBy(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+            )
+            ->orderBy('laporan.id_laporan', 'desc');
+        $laporan->whereYear('tgl_transaksi', $request->year);
+        $laporan->whereMonth('tgl_transaksi', $request->month);
+        $reports = $laporan->get();
+
+        if ($reports->count() > 0) {
+            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $reports]);
+        } else {
+            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
+        }
+    }
     public function printReportByWeek(Request $request)
     {
         $req['id_sekolah']      = $request->id_sekolah;
