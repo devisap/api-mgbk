@@ -581,7 +581,6 @@ class ReportController extends Controller
         if ($reports->count() < 1) {
             return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
         } else {
-
             // return view('print.laporan.semesteran', compact('reports', 'user', 'semester'));
             $pdf = PDF::loadView('print.laporan.semesteran', compact('reports', 'user', 'semester'));
             $pdf->setPaper('legal', 'potrait');
@@ -657,12 +656,12 @@ class ReportController extends Controller
         if ($reports->count() < 1) {
             return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
         } else {
-            return view('print.laporan.tahunan', compact('reports', 'user', 'year'));
-            // $pdf = PDF::loadView('print.laporan.tahunan', compact('reports', 'user'));
-            // $pdf->setPaper('legal', 'potrait');
-            // $pdf->save($fullFilePath);
+            // return view('print.laporan.tahunan', compact('reports', 'user', 'year'));
+            $pdf = PDF::loadView('print.laporan.tahunan', compact('reports', 'user', 'year'));
+            $pdf->setPaper('legal', 'potrait');
+            $pdf->save($fullFilePath);
 
-            // return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
+            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
         }
     }
 }
