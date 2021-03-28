@@ -144,9 +144,9 @@
     <table class="border w-100 border-collapse">
 
         <tr>
-            <th class="text-align-left border-right border-bottom p-min">No</th>
-            <th class="border-right border-bottom p-min">Jenis Kegiatan</th>
-            <th class="border-bottom p-min">Detail</th>
+            <th style="width: 10px;" class="text-align-left border-right border-bottom p-min">No</th>
+            <th style="width: 20%;" class="border-right border-bottom p-min">Jenis Kegiatan</th>
+            <th style="width: 10px;" class="border-bottom p-min">Detail</th>
         </tr>
 
         @if (count($reports) == 0)
@@ -156,7 +156,7 @@
         @else
             @foreach($reports as $report)
             <tr>
-                <td class="text-align-left border-right border-bottom p-min">{{ $loop->iteration }}</td>
+                <td class="text-align-center border-right border-bottom p-min">{{ $loop->iteration }}</td>
                 <td class="text-align-left border-right border-bottom p-min">{{ $report->kegiatan }}</td>
                 <td class="text-align-left border-right border-bottom p-min">{{ $report->detail }}</td>
             </tr>
