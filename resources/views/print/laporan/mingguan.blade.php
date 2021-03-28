@@ -152,19 +152,19 @@
             <th class="border-bottom p-min">Detail</th>
         </tr>
         @if (count($reports) == 0)
-        <tr>
-            <td colspan="4" class="text-align-center">Data tidak ada.</td>
-        </tr>
+            <tr>
+                <td colspan="4" class="text-align-center">Data tidak ada.</td>
+            </tr>
         @else
 
-        @foreach($reports as $report)
-        <tr>
-            <td class="text-align-center border-right border-bottom p-min">{{ $loop->iteration }}</td>
-            <td class="text-align-center border-right border-bottom p-min">{{ tgl_indo($report->tgl_transaksi) }}</td>
-            <td class="text-align-left border-right border-bottom p-min">{{ $report->kegiatan }}</td>
-            <td class="text-align-left border-right border-bottom p-min">{{ $report->detail }}</td>
-        </tr>
-        @endforeach
+            @foreach($reports as $report)
+            <tr>
+                <td class="text-align-center border-right border-bottom p-min">{{ $loop->iteration }}</td>
+                <td class="text-align-center border-right border-bottom p-min">{{ tgl_indo($report->tgl_transaksi) }}</td>
+                <td class="text-align-left border-right border-bottom p-min">{{ $report->kegiatan }}</td>
+                <td class="text-align-left border-right border-bottom p-min">{{ $report->detail }}</td>
+            </tr>
+            @endforeach
 
         @endif
     </table>

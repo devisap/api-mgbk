@@ -152,32 +152,32 @@
             <th class="border-bottom p-min">Ekivalensi</th>
         </tr>
         @if (count($reports) == 0)
-        <tr>
-            <td colspan="4" class="text-align-center">Data tidak ada.</td>
-        </tr>
+            <tr>
+                <td colspan="4" class="text-align-center">Data tidak ada.</td>
+            </tr>
         @else
 
-        @foreach($reports as $report)
-        @php
-            $totalJam += $report->jumlah_ekuivalen;
-        @endphp
-        <tr>
-            <td class="text-align-center border-right border-bottom p-min">{{ $loop->iteration }}</td>
-            <td class="text-align-left border-right border-bottom p-min">{{ $report->kegiatan }}</td>
-            <td class="text-align-center border-right border-bottom p-min">{{ $report->jumlah_kegiatan }}</td>
-            <td class="text-align-center border-right border-bottom p-min">{{ $report->jumlah_ekuivalen }}</td>
-        </tr>
-        @endforeach
+            @foreach($reports as $report)
+            @php
+                $totalJam += $report->jumlah_ekuivalen;
+            @endphp
+            <tr>
+                <td class="text-align-center border-right border-bottom p-min">{{ $loop->iteration }}</td>
+                <td class="text-align-left border-right border-bottom p-min">{{ $report->kegiatan }}</td>
+                <td class="text-align-center border-right border-bottom p-min">{{ $report->jumlah_kegiatan }}</td>
+                <td class="text-align-center border-right border-bottom p-min">{{ $report->jumlah_ekuivalen }}</td>
+            </tr>
+            @endforeach
 
-        <tr>
-            <th colspan="3" class="border-right border-bottom p-min">
-                Total Jam
-            </th>
-            <td class="text-align-center border-right border-bottom p-min">
-                {{ $totalJam }}
-            </td>
-        </tr>
-
+            <tr>
+                <th colspan="3" class="border-right border-bottom p-min">
+                    Total Jam
+                </th>
+                <td class="text-align-center border-right border-bottom p-min">
+                    {{ $totalJam }}
+                </td>
+            </tr>
+            
         @endif
     </table>
 </body>
