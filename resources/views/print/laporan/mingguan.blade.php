@@ -99,6 +99,9 @@
 
     $tgl = tgl_indo($reports[0]->tgl_transaksi);
 
+    $kelas       = $user->kelas_pengampu;
+    $eachkelas   = explode(";",$kelas);
+
 @endphp
 
     <table class="mb-max">
@@ -115,9 +118,18 @@
                 Kelas yang diampuh
             </th>
             <td>
-                : {{ $user->kelas_pengampu }}
+                : 
             </td>
         </tr>
+        <tr>
+			<td> 
+				<ol>
+                    @foreach ($eachkelas as $item)
+                        <li>{{ $item }}</li> 
+                    @endforeach 
+				</ol> 
+            </td>
+		</tr>
         <tr>
             <th class="text-align-left">
                 Minggu ke
