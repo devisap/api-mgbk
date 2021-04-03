@@ -152,6 +152,97 @@ class ReportController extends Controller
         // return $pdf->stream();
         // return $pdf->download('laporan-harian.pdf');
     }
+    public function getReportByWeek(Request $request)
+    {
+        $req['id_sekolah']      = $request->id_sekolah;
+        $req['id_user']         = $request->id_user;
+
+        $validator = Validator::make($req, [
+            'id_sekolah'    => 'required|int|exists:sekolah',
+            'id_user'       => 'required|int|exists:users',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
+        }
+
+        $week = DB::table('weeks')
+            ->where('id_week', $request->id_week)
+            ->first();
+        $tgl_awal  = date('Y-m-d', strtotime($week->start_date));
+        $tgl_akhir = date('Y-m-d', strtotime($week->end_date));
+
+        $laporan = DB::table('laporan')
+            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
+            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
+            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
+            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
+            ->select('laporan.*', 'kegiatan.*', 'sekolah.nama_sekolah', 'profiles.*')
+            ->where('profiles.id_user', $req['id_user'])
+            ->where('laporan.id_user', $req['id_user'])
+            ->where('laporan.id_sekolah', $req['id_sekolah']);
+        $laporan->whereBetween('tgl_transaksi', [$tgl_awal, $tgl_akhir]);
+        $reports = $laporan->get();
+
+        if ($reports->count() > 0) {
+            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $reports]);
+        } else {
+            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
+        }
+    }
+    public function printReportByWeek(Request $request)
+    {
+        $req['id_sekolah']      = $request->id_sekolah;
+        $req['id_user']         = $request->id_user;
+
+        $validator = Validator::make($req, [
+            'id_sekolah'    => 'required|int|exists:sekolah',
+            'id_user'       => 'required|int|exists:users',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
+        }
+
+        $user           = DB::table('v_profiles')->where('id_user', $req['id_user'])->first();
+        $filePath       = 'laporan/' . $user->name . '/mingguan';
+        $fullFilePath   = 'laporan/' . $user->name . '/mingguan/LaporanMingguan_' . $user->nama_lengkap .  '.pdf';
+        $isExist        = File::exists($filePath);
+        if ($isExist == false) {
+            File::makeDirectory($filePath, 0777, true, true);
+        }
+
+        $week = DB::table('weeks')
+            ->where('id_week', $request->id_week)
+            ->first();
+        $tgl_awal  = date('Y-m-d', strtotime($week->start_date));
+        $tgl_akhir = date('Y-m-d', strtotime($week->end_date));
+
+        $laporan = DB::table('laporan')
+            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
+            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
+            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
+            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
+            ->select('laporan.*', 'kegiatan.*', 'sekolah.nama_sekolah', 'profiles.*')
+            ->where('profiles.id_user', $req['id_user'])
+            ->where('laporan.id_user', $req['id_user'])
+            ->where('laporan.id_sekolah', $req['id_sekolah']);
+        $laporan->whereBetween('tgl_transaksi', [$tgl_awal, $tgl_akhir]);
+        $reports = $laporan->get();
+        // $user       = $laporan->first();
+
+        if ($reports->count() < 1) {
+            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
+        } else {
+            // return view('print.laporan.mingguan', compact('reports', 'user', 'week'));
+            $pdf = PDF::loadView('print.laporan.mingguan', compact('reports', 'user', 'week'));
+            $pdf->setPaper('legal', 'potrait');
+            $pdf->save($fullFilePath);
+
+            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
+        }
+    }
+
     public function getReportByMonth(Request $request)
     {
         $req['id_sekolah']      = $request->id_sekolah;
@@ -341,51 +432,6 @@ class ReportController extends Controller
 
             return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
         }
-    }
-    public function printReportByWeek(Request $request)
-    {
-        $req['id_sekolah']      = $request->id_sekolah;
-        $req['id_user']         = $request->id_user;
-
-        $validator = Validator::make($req, [
-            'id_sekolah'    => 'required|int|exists:sekolah',
-            'id_user'       => 'required|int|exists:users',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
-        }
-
-        $user           = DB::table('v_profiles')->where('id_user', $req['id_user'])->first();
-        $filePath       = 'laporan/' . $user->name . '/mingguan';
-        $fullFilePath   = 'laporan/' . $user->name . '/mingguan/LaporanMingguan_' . $user->nama_lengkap .  '.pdf';
-        $isExist        = File::exists($filePath);
-        if ($isExist == false) {
-            File::makeDirectory($filePath, 0777, true, true);
-        }
-
-        $week = DB::table('weeks')
-            ->where('id_week', $request->id_week)
-            ->first();
-        $tgl_awal  = date('Y-m-d', strtotime($week->start_date));
-        $tgl_akhir = date('Y-m-d', strtotime($week->end_date));
-
-        $laporan = DB::table('laporan')
-            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
-            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
-            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
-            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
-            ->select('laporan.*', 'kegiatan.*', 'sekolah.nama_sekolah', 'profiles.*')
-            ->where('profiles.id_user', $req['id_user'])
-            ->where('laporan.id_user', $req['id_user'])
-            ->where('laporan.id_sekolah', $req['id_sekolah']);
-        $laporan->whereBetween('tgl_transaksi', [$tgl_awal, $tgl_akhir]);
-        $reports = $laporan->get();
-
-        $pdf = PDF::loadView('print.laporan.mingguan', compact('reports', 'user'));
-        $pdf->setPaper('legal', 'potrait');
-        $pdf->save($fullFilePath);
-        return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
     }
 
     public function printReportByMonth(Request $request){
