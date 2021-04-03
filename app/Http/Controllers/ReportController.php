@@ -257,8 +257,7 @@ class ReportController extends Controller
         return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
     }
 
-    public function printReportByMonth(Request $request)
-    {
+    public function printReportByMonth(Request $request){
         $req['id_sekolah']      = $request->id_sekolah;
         $req['id_user']         = $request->id_user;
 
@@ -284,18 +283,54 @@ class ReportController extends Controller
             ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
             ->Join('users', 'laporan.id_user', '=', 'users.id_user')
             ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
-            ->select('laporan.*', 'kegiatan.*', 'sekolah.nama_sekolah', 'profiles.*')
+            ->select(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+                DB::raw('COUNT(laporan.id_laporan) as jumlah_kegiatan'),
+                DB::raw('SUM(ekuivalen) as jumlah_ekuivalen')
+            )
             ->where('profiles.id_user', $req['id_user'])
             ->where('laporan.id_user', $req['id_user'])
-            ->where('laporan.id_sekolah', $req['id_sekolah']);
+            ->where('laporan.id_sekolah', $req['id_sekolah'])
+            ->groupBy(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+            )
+            ->orderBy('laporan.id_laporan', 'desc');
         $laporan->whereYear('tgl_transaksi', $request->year);
         $laporan->whereMonth('tgl_transaksi', $request->month);
         $reports = $laporan->get();
+        // $user = $laporan->first();
+        // dd($user);
 
-        $pdf = PDF::loadView('print.laporan.bulanan', compact('reports', 'user'));
-        $pdf->setPaper('legal', 'potrait');
-        $pdf->save($fullFilePath);
-        return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
+        if ($reports->count() < 1) {
+            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
+        } else {
+            // return view('print.laporan.bulanan', compact('reports', 'user'));
+            $pdf = PDF::loadView('print.laporan.bulanan', compact('reports', 'user'));
+            $pdf->setPaper('legal', 'potrait');
+            $pdf->save($fullFilePath);
+
+            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
+        }
     }
 
     public function printReportBySemester(Request $request)
