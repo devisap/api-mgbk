@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
 use PDF;
+use \stdClass;
 
 class ReportController extends Controller
 {
@@ -65,10 +66,17 @@ class ReportController extends Controller
 
     public function loadWeeks(Request $request)
     {
+        $arr = array();
         $weeks = DB::table('weeks')->where('year', $request->get('year'))
-            ->pluck('week', 'id_week');
+            ->get();
+        foreach ($weeks as $item) {
+            $obj        = new stdClass();
+            $obj->id    = $item->id_week;
+            $obj->week  = $item->week;
+            array_push($arr, $obj);
+        }
 
-        return response()->json($weeks);
+        return response()->json(['data' => $arr]);
     }
 
     public function getReportByDate(Request $request, $tanggal)
