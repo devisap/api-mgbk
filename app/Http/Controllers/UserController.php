@@ -75,7 +75,7 @@ class UserController extends Controller
             'foto_profil'           => 'nullable|file|mimes:jgp,jpeg,bmp,png|dimensions:max_width=512,max_height=512|max:1024',
             'alamat_sekolah'        => 'required',
             'nama_kepala_sekolah'   => 'required',
-            'tambahan_informasi'    => 'required',
+            'tambahan_informasi'    => 'nullable',
             'logo_sekolah'          => 'nullable|file|mimes:jgp,jpeg,bmp,png|dimensions:max_width=512,max_height=512|max:1024'
         ]);
 
