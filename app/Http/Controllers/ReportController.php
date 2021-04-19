@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\View;
 use PDF;
-use \stdClass;
 
 class ReportController extends Controller
 {
@@ -66,17 +66,10 @@ class ReportController extends Controller
 
     public function loadWeeks(Request $request)
     {
-        $arr = array();
         $weeks = DB::table('weeks')->where('year', $request->get('year'))
-            ->get();
-        foreach ($weeks as $item) {
-            $obj        = new stdClass();
-            $obj->id    = $item->id_week;
-            $obj->week  = $item->week;
-            array_push($arr, $obj);
-        }
+            ->pluck('week', 'id_week');
 
-        return response()->json(['data' => $arr]);
+        return response()->json($weeks);
     }
 
     public function getReportByDate(Request $request, $tanggal)
@@ -103,63 +96,6 @@ class ReportController extends Controller
         }
     }
 
-    public function printReportByDate(Request $request, $tanggal)
-    {
-        $req['tgl_transaksi']   = $tanggal;
-        $req['id_sekolah']      = $request->id_sekolah;
-        $req['id_user']         = $request->id_user;
-
-        $validator = Validator::make($req, [
-            'tgl_transaksi' => 'required|date',
-            'id_sekolah'    => 'required|int|exists:sekolah',
-            'id_user'       => 'required|int|exists:users',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
-        }
-
-        $user           = DB::table('v_profiles')->where('id_user', $req['id_user'])->first();
-        $filePath       = 'laporan/' . $user->name . '/harian';
-        $fullFilePath   = 'laporan/' . $user->name . '/harian/LaporanHarian_' . $user->nama_lengkap . '_' . $req['tgl_transaksi'] . '.pdf';
-        $isExist        = File::exists($filePath);
-        if ($isExist == false) {
-            File::makeDirectory($filePath, 0777, true, true);
-        }
-
-        // $reports = DB::table('laporan')
-        //     ->leftJoin('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
-        //     ->leftJoin('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
-        //     ->leftJoin('profiles', 'laporan.id_user', '=', 'profiles.id_user')
-        //     ->select('laporan.*', 'kegiatan.*', 'sekolah.nama_sekolah', 'profiles.nama_lengkap')
-        //     ->where('laporan.id_user', $req['id_user'])
-        //     ->where('laporan.id_sekolah', $req['id_sekolah'])
-        //     ->where('laporan.tgl_transaksi', $req['tgl_transaksi'])
-        //     ->get();
-
-        $laporan = DB::table('laporan')
-            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
-            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
-            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
-            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
-            ->select('laporan.*', 'kegiatan.*', 'sekolah.nama_sekolah', 'profiles.*')
-            ->where('profiles.id_user', $req['id_user'])
-            ->where('laporan.id_user', $req['id_user'])
-            ->where('laporan.id_sekolah', $req['id_sekolah']);
-        $laporan->where('laporan.tgl_transaksi', $req['tgl_transaksi']);
-        $reports = $laporan->get();
-
-        // return view('print.laporan.laporan_harian', compact('reports', 'user'));
-        // $pdf = app()->make('dompdf.wrapper');
-        // dd($reports);
-
-        $pdf = PDF::loadView('print.laporan.harian', compact('reports', 'user'));
-        $pdf->setPaper('legal', 'potrait');
-        $pdf->save($fullFilePath);
-        return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
-        // return $pdf->stream();
-        // return $pdf->download('laporan-harian.pdf');
-    }
     public function getReportByWeek(Request $request)
     {
         $req['id_sekolah']      = $request->id_sekolah;
@@ -196,58 +132,6 @@ class ReportController extends Controller
             return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $reports]);
         } else {
             return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
-        }
-    }
-    public function printReportByWeek(Request $request)
-    {
-        $req['id_sekolah']      = $request->id_sekolah;
-        $req['id_user']         = $request->id_user;
-
-        $validator = Validator::make($req, [
-            'id_sekolah'    => 'required|int|exists:sekolah',
-            'id_user'       => 'required|int|exists:users',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
-        }
-
-        $user           = DB::table('v_profiles')->where('id_user', $req['id_user'])->first();
-        $filePath       = 'laporan/' . $user->name . '/mingguan';
-        $fullFilePath   = 'laporan/' . $user->name . '/mingguan/LaporanMingguan_' . $user->nama_lengkap .  '.pdf';
-        $isExist        = File::exists($filePath);
-        if ($isExist == false) {
-            File::makeDirectory($filePath, 0777, true, true);
-        }
-
-        $week = DB::table('weeks')
-            ->where('id_week', $request->id_week)
-            ->first();
-        $tgl_awal  = date('Y-m-d', strtotime($week->start_date));
-        $tgl_akhir = date('Y-m-d', strtotime($week->end_date));
-
-        $laporan = DB::table('laporan')
-            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
-            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
-            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
-            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
-            ->select('laporan.*', 'kegiatan.*', 'sekolah.nama_sekolah', 'profiles.*')
-            ->where('profiles.id_user', $req['id_user'])
-            ->where('laporan.id_user', $req['id_user'])
-            ->where('laporan.id_sekolah', $req['id_sekolah']);
-        $laporan->whereBetween('tgl_transaksi', [$tgl_awal, $tgl_akhir]);
-        $reports = $laporan->get();
-        // $user       = $laporan->first();
-
-        if ($reports->count() < 1) {
-            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
-        } else {
-            // return view('print.laporan.mingguan', compact('reports', 'user', 'week'));
-            $pdf = PDF::loadView('print.laporan.mingguan', compact('reports', 'user', 'week'));
-            $pdf->setPaper('legal', 'potrait');
-            $pdf->save($fullFilePath);
-
-            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
         }
     }
 
@@ -310,7 +194,9 @@ class ReportController extends Controller
             return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
         }
     }
-    public function getReportBySemester(Request $request){
+
+    public function getReportBySemester(Request $request)
+    {
         $req['id_sekolah']      = $request->id_sekolah;
         $req['id_user']         = $request->id_user;
 
@@ -377,7 +263,630 @@ class ReportController extends Controller
         }
     }
 
-    public function printReportBySemester(Request $request){
+    public function getReportByYear(Request $request)
+    {
+        $req['id_sekolah']      = $request->id_sekolah;
+        $req['id_user']         = $request->id_user;
+
+        $validator = Validator::make($req, [
+            'id_sekolah'    => 'required|int|exists:sekolah',
+            'id_user'       => 'required|int|exists:users',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
+        }
+
+        $laporan = DB::table('laporan')
+            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
+            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
+            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
+            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
+            ->select(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+                DB::raw('COUNT(laporan.id_laporan) as jumlah_kegiatan'),
+                DB::raw('SUM(ekuivalen) as jumlah_ekuivalen')
+            )
+            ->where('profiles.id_user', $req['id_user'])
+            ->where('laporan.id_user', $req['id_user'])
+            ->where('laporan.id_sekolah', $req['id_sekolah'])
+            ->groupBy(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+            )
+            ->orderBy('laporan.id_laporan', 'desc');
+        $laporan->whereYear('tgl_transaksi', $request->year);
+        $reports = $laporan->get();
+
+        if ($reports->count() > 0) {
+            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $reports]);
+        } else {
+            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
+        }
+    }
+
+    private function tgl_indo($tanggal)
+    {
+        $bulan = array(
+            1 =>   'Januari',
+            'Februari',
+            'Maret',
+            'April',
+            'Mei',
+            'Juni',
+            'Juli',
+            'Agustus',
+            'September',
+            'Oktober',
+            'November',
+            'Desember'
+        );
+        $pecahkan = explode('-', $tanggal);
+
+        return $pecahkan[2] . ' ' . $bulan[(int)$pecahkan[1]] . ' ' . $pecahkan[0];
+    }
+
+    private function bln_indo($tanggal)
+    {
+        $bulan = array(
+            1 =>   'Januari',
+            'Februari',
+            'Maret',
+            'April',
+            'Mei',
+            'Juni',
+            'Juli',
+            'Agustus',
+            'September',
+            'Oktober',
+            'November',
+            'Desember'
+        );
+        $pecahkan = explode('-', $tanggal);
+
+        return $bulan[(int)$pecahkan[1]];
+    }
+
+    private function setHeaderFooter($mpdf, $guru, $table, $printBy, $reportTime = null)
+    {
+
+        if ($printBy == 'date') {
+            $reportFor  = 'Tanggal laporan';
+            $reportTime = $this->tgl_indo($guru->tgl_transaksi);
+        } elseif ($printBy == 'week') {
+            $reportFor  = 'Minggu ke';
+            $reportTime = $reportTime->week;
+        } elseif ($printBy == 'month') {
+            $reportFor  = 'Bulan ke';
+            $reportTime = $this->bln_indo($guru->tgl_transaksi);
+        } elseif ($printBy == 'semester') {
+            $reportFor  = 'Semester ke';
+            $reportTime = $reportTime;
+        } elseif ($printBy == 'year') {
+            $reportFor  = 'Tahun ke';
+            $reportTime = $reportTime;
+        }
+
+        $stylesheet = file_get_contents(public_path('css/mpdf.css'));
+        $mpdf->WriteHTML($stylesheet, 1);
+        $mpdf->SetHTMLHeader('
+        <table class="border w-100 p-max mb-max valign-middle">
+            <tr>
+                <th>
+                    <img src="https://api-mgbk.bgskr-project.my.id/upload/logoSekolah/' . $guru->logo_sekolah . '" width="80" height="80">
+                </th>
+                <th>
+                    <span class="text-title">' . $guru->nama_sekolah . ' </span><br>
+                    <span class="text-regular">' . $guru->alamat_sekolah . '</span><br>
+                    <span class="text-regular">' . $guru->tambahan_informasi . '</span><br>
+                </th>
+            </tr>
+        </table>
+
+        <table class="mb-max">
+            <tr>
+                <th class="text-align-left" style="width:30%;">
+                    Nama Guru
+                </th>
+                <td>
+                    :  ' . $guru->nama_lengkap . '
+                </td>
+            </tr>
+            <tr>
+                <th class="text-align-left" style="width:30%;">
+                    Kelas yang diampuh
+                </th>
+                <td>
+                    : 
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2"> 
+                    ' . $table . '
+                </td>
+            </tr>
+            <tr>
+                <th class="text-align-left" style="width:30%;">
+                    ' . $reportFor . '
+                </th>
+                <td>
+                    : ' . $reportTime . '
+                </td>
+            </tr>
+        </table>
+
+        <p>
+            Berikut detail laporan dari Guru BK yang bersangkutan :
+        </p>');
+        $mpdf->SetHTMLFooter('
+        <table class="table-layout-fixed w-100">
+            <tr>
+                <td style="width:50%;"></td>
+                <td style="width:50%">
+                <table class="border-1 border-collapse table-layout-fixed" style="width: 400px;">
+                    <tr>
+                        <th class="border-1 p-min w-50">Dibuat</th>
+                        <th class="border-1 p-min w-50">Mengetahui</th>
+                    </tr>
+                    <tr class="text-align-center">
+                        <td class="border-1 p-min"><img style="visibility: hidden;" src="https://via.placeholder.com/100" width="100px" height="100px" /></td>
+                        <td class="border-1 p-min"><img style="visibility: hidden;" src="https://via.placeholder.com/100" width="100px" height="100px" /></td>
+                    </tr>
+                    <tr>
+                        <td class="border-1 p-min text-align-center">' . $guru->nama_lengkap . '</td>
+                        <td class="border-1 p-min text-align-center">' . $guru->nama_kepala_sekolah . '</td>
+                    </tr>
+                    <tr>
+                        <td class="border-1 p-min text-align-center">Guru BK</td>
+                        <td class="border-1 p-min text-align-center">Kepala Sekolah</td>
+                    </tr>
+                </table>
+                </td>
+            </tr>
+        </table>
+        ');
+    }
+
+    public function printReportByDate(Request $request, $tanggal)
+    {
+        $req['tgl_transaksi']   = $tanggal;
+        $req['id_sekolah']      = $request->id_sekolah;
+        $req['id_user']         = $request->id_user;
+
+        $validator = Validator::make($req, [
+            'tgl_transaksi' => 'required|date',
+            'id_sekolah'    => 'required|int|exists:sekolah',
+            'id_user'       => 'required|int|exists:users',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
+        }
+
+        $user           = DB::table('v_profiles')->where('id_user', $req['id_user'])->first();
+        $filePath       = 'laporan/' . $user->name . '/harian';
+        $fullFilePath   = 'laporan/' . $user->name . '/harian/LaporanHarian_' . $user->nama_lengkap . '_' . $req['tgl_transaksi'] . '.pdf';
+        $isExist        = File::exists($filePath);
+        if ($isExist == false) {
+            File::makeDirectory($filePath, 0777, true, true);
+        }
+
+        $laporan = DB::table('laporan')
+            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
+            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
+            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
+            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
+            ->select(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'laporan.detail',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.nama_kepala_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+                DB::raw('COUNT(laporan.id_laporan) as jumlah_kegiatan'),
+                DB::raw('SUM(ekuivalen) as jumlah_ekuivalen')
+            )
+            ->where('laporan.id_user', $req['id_user'])
+            ->where('laporan.id_sekolah', $req['id_sekolah'])
+            ->groupBy(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'laporan.detail',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.nama_kepala_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+            )
+            ->orderBy('laporan.id_laporan', 'ASC');
+        $laporan->where('laporan.tgl_transaksi', $req['tgl_transaksi']);
+        $reports    = $laporan->get();
+        $guru       = $laporan->first();
+        // dd($reports);
+
+        // return view('print.laporan.harian', compact('reports', 'user'));
+        // $pdf = app()->make('dompdf.wrapper');
+        // return $pdf->stream();
+        // return $pdf->download('laporan-harian.pdf');
+
+        if ($reports->count() < 1) {
+            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
+        } else {
+            // return view('print.laporan.harian', compact('reports', 'user'));
+            // $pdf = PDF::loadView('print.laporan.harian', compact('reports', 'user'));
+            // $pdf->setPaper('legal', 'potrait');
+            // $pdf->save($fullFilePath);
+
+            $namaLengkap = $guru->nama_lengkap;
+
+            $kelas      = $guru->kelas_pengampu;
+            $eachkelas  = explode(";", $kelas);
+
+            $table = '<table style="width: 50%;"><tr>';
+            $td = '<td style="width:50%;">';
+            $ul = '<ul>';
+            $no = 0;
+            $marginTop = 85;
+            $marginBot = 45;
+
+            foreach ($eachkelas as $item) :
+                $marginTop = $marginTop + 5;
+                $marginBot = $marginBot + 5;
+
+                if ($no == ($no % 4 == 0)) {
+                    $ul .= '</ul></td>';
+
+                    $ul .= $td . '<ul>';
+                    $marginTop = 90;
+                    $marginBot = 50;
+                }
+                $ul .= '<li>' . $item . '</li>';
+
+                $no++;
+                if ($no > 4) {
+                    $marginTop = 105;
+                    $marginBot = 65;
+                }
+            endforeach;
+
+            $ul .= '</ul>';
+            $td .= $ul . '</td>';
+            $table .= $td . '</tr></table>';
+
+            $mpdf = new \Mpdf\Mpdf();
+
+            $filename   = 'laporan-harian' . $namaLengkap . '.pdf';
+            $mpdf       = new \Mpdf\Mpdf([
+                'margin_left'   => 10,
+                'margin_right'  => 10,
+                'margin_top'    => $marginTop,
+                'margin_bottom' => $marginBot,
+                'margin_header' => 10,
+                'margin_footer' => 10,
+            ]);
+
+            $html   = View::make('print.laporan.harian')->with('reports', $reports);
+            $html   = $html->render();
+
+            $this->setHeaderFooter($mpdf, $guru, $table, 'date');
+
+            $mpdf->autoPageBreak = true;
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($fullFilePath, 'F');
+
+            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
+        }
+    }
+
+    public function printReportByWeek(Request $request)
+    {
+        $req['id_sekolah']      = $request->id_sekolah;
+        $req['id_user']         = $request->id_user;
+
+        $validator = Validator::make($req, [
+            'id_sekolah'    => 'required|int|exists:sekolah',
+            'id_user'       => 'required|int|exists:users',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
+        }
+
+        $user           = DB::table('v_profiles')->where('id_user', $req['id_user'])->first();
+        $filePath       = 'laporan/' . $user->name . '/mingguan';
+        $fullFilePath   = 'laporan/' . $user->name . '/mingguan/LaporanMingguan_' . $user->nama_lengkap .  '.pdf';
+        $isExist        = File::exists($filePath);
+        if ($isExist == false) {
+            File::makeDirectory($filePath, 0777, true, true);
+        }
+
+        $week = DB::table('weeks')
+            ->where('id_week', $request->id_week)
+            ->first();
+        $tgl_awal  = date('Y-m-d', strtotime($week->start_date));
+        $tgl_akhir = date('Y-m-d', strtotime($week->end_date));
+
+        $laporan = DB::table('laporan')
+            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
+            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
+            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
+            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
+            ->select(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'laporan.detail',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.nama_kepala_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+                DB::raw('COUNT(laporan.id_laporan) as jumlah_kegiatan'),
+                DB::raw('SUM(ekuivalen) as jumlah_ekuivalen')
+            )
+            ->where('laporan.id_user', $req['id_user'])
+            ->where('laporan.id_sekolah', $req['id_sekolah'])
+            ->groupBy(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'laporan.detail',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.nama_kepala_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+            )
+            ->orderBy('laporan.id_laporan', 'ASC');
+        $laporan->whereBetween('tgl_transaksi', [$tgl_awal, $tgl_akhir]);
+        $reports    = $laporan->get();
+        $guru       = $laporan->first();
+
+        if ($reports->count() < 1) {
+            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
+        } else {
+            // return view('print.laporan.mingguan', compact('reports', 'user', 'week'));
+            // $pdf = PDF::loadView('print.laporan.mingguan', compact('reports', 'user', 'week'));
+            // $pdf->setPaper('legal', 'potrait');
+            // $pdf->save($fullFilePath);
+
+            $namaLengkap = $guru->nama_lengkap;
+
+            $kelas      = $guru->kelas_pengampu;
+            $eachkelas  = explode(";", $kelas);
+
+            $table = '<table style="width: 50%;"><tr>';
+            $td = '<td style="width:50%;">';
+            $ul = '<ul>';
+            $no = 0;
+            $marginTop = 85;
+            $marginBot = 45;
+
+            foreach ($eachkelas as $item) :
+                $marginTop = $marginTop + 5;
+                $marginBot = $marginBot + 5;
+
+                if ($no == ($no % 4 == 0)) {
+                    $ul .= '</ul></td>';
+
+                    $ul .= $td . '<ul>';
+                    $marginTop = 90;
+                    $marginBot = 50;
+                }
+                $ul .= '<li>' . $item . '</li>';
+
+                $no++;
+                if ($no > 4) {
+                    $marginTop = 105;
+                    $marginBot = 65;
+                }
+            endforeach;
+
+            $ul .= '</ul>';
+            $td .= $ul . '</td>';
+            $table .= $td . '</tr></table>';
+
+            $mpdf = new \Mpdf\Mpdf();
+
+            $filename   = 'laporan-mingguan' . $namaLengkap . '.pdf';
+            $mpdf       = new \Mpdf\Mpdf([
+                'margin_left'   => 10,
+                'margin_right'  => 10,
+                'margin_top'    => $marginTop,
+                'margin_bottom' => $marginBot,
+                'margin_header' => 10,
+                'margin_footer' => 10,
+            ]);
+
+            $html   = View::make('print.laporan.mingguan')->with('reports', $reports);
+            $html   = $html->render();
+
+            $this->setHeaderFooter($mpdf, $guru, $table, 'week', $week);
+
+            $mpdf->autoPageBreak = true;
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($fullFilePath, 'F');
+
+            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
+        }
+    }
+
+    public function printReportByMonth(Request $request)
+    {
+        $req['id_sekolah']      = $request->id_sekolah;
+        $req['id_user']         = $request->id_user;
+
+        $validator = Validator::make($req, [
+            'id_sekolah'    => 'required|int|exists:sekolah',
+            'id_user'       => 'required|int|exists:users',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
+        }
+
+        $user           = DB::table('v_profiles')->where('id_user', $req['id_user'])->first();
+        $filePath       = 'laporan/' . $user->name . '/bulanan';
+        $fullFilePath   = 'laporan/' . $user->name . '/bulanan/LaporanBulanan_' . $user->nama_lengkap .  '.pdf';
+        $isExist        = File::exists($filePath);
+        if ($isExist == false) {
+            File::makeDirectory($filePath, 0777, true, true);
+        }
+
+        $laporan = DB::table('laporan')
+            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
+            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
+            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
+            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
+            ->select(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'laporan.detail',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.nama_kepala_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+                DB::raw('COUNT(laporan.id_laporan) as jumlah_kegiatan'),
+                DB::raw('SUM(ekuivalen) as jumlah_ekuivalen')
+            )
+            ->where('laporan.id_user', $req['id_user'])
+            ->where('laporan.id_sekolah', $req['id_sekolah'])
+            ->groupBy(
+                'laporan.id_user',
+                'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'laporan.detail',
+                'kegiatan.id_kegiatan',
+                'kegiatan.kegiatan',
+                'sekolah.nama_sekolah',
+                'profiles.nama_lengkap',
+                'profiles.logo_sekolah',
+                'profiles.alamat_sekolah',
+                'profiles.nama_kepala_sekolah',
+                'profiles.tambahan_informasi',
+                'profiles.kelas_pengampu',
+            )
+            ->orderBy('laporan.id_laporan', 'ASC');
+        $laporan->whereYear('tgl_transaksi', $request->year);
+        $laporan->whereMonth('tgl_transaksi', $request->month);
+        $reports    = $laporan->get();
+        $guru       = $laporan->first();
+        // dd($guru);
+
+        if ($reports->count() < 1) {
+            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
+        } else {
+            // return view('print.laporan.bulanan', compact('reports', 'user'));
+            // $pdf = PDF::loadView('print.laporan.bulanan', compact('reports', 'user'));
+            // $pdf->setPaper('legal', 'potrait');
+            // $pdf->save($fullFilePath);
+
+            $namaLengkap = $guru->nama_lengkap;
+
+            $kelas      = $guru->kelas_pengampu;
+            $eachkelas  = explode(";", $kelas);
+
+            $table = '<table style="width: 50%;"><tr>';
+            $td = '<td style="width:50%;">';
+            $ul = '<ul>';
+            $no = 0;
+            $marginTop = 85;
+            $marginBot = 45;
+
+            foreach ($eachkelas as $item) :
+                $marginTop = $marginTop + 5;
+                $marginBot = $marginBot + 5;
+
+                if ($no == ($no % 4 == 0)) {
+                    $ul .= '</ul></td>';
+
+                    $ul .= $td . '<ul>';
+                    $marginTop = 90;
+                    $marginBot = 50;
+                }
+                $ul .= '<li>' . $item . '</li>';
+
+                $no++;
+                if ($no > 4) {
+                    $marginTop = 105;
+                    $marginBot = 65;
+                }
+            endforeach;
+
+            $ul .= '</ul>';
+            $td .= $ul . '</td>';
+            $table .= $td . '</tr></table>';
+
+            $mpdf = new \Mpdf\Mpdf();
+
+            $filename   = 'laporan-bulanan' . $namaLengkap . '.pdf';
+            $mpdf       = new \Mpdf\Mpdf([
+                'margin_left'   => 10,
+                'margin_right'  => 10,
+                'margin_top'    => $marginTop,
+                'margin_bottom' => $marginBot,
+                'margin_header' => 10,
+                'margin_footer' => 10,
+            ]);
+
+            $html   = View::make('print.laporan.bulanan')->with('reports', $reports);
+            $html   = $html->render();
+
+            $this->setHeaderFooter($mpdf, $guru, $table, 'month');
+
+            $mpdf->autoPageBreak = true;
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($fullFilePath, 'F');
+
+            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
+        }
+    }
+
+    public function printReportBySemester(Request $request)
+    {
         $req['id_sekolah']      = $request->id_sekolah;
         $req['id_user']         = $request->id_user;
 
@@ -414,37 +923,42 @@ class ReportController extends Controller
             ->select(
                 'laporan.id_user',
                 'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'laporan.detail',
                 'kegiatan.id_kegiatan',
                 'kegiatan.kegiatan',
                 'sekolah.nama_sekolah',
                 'profiles.nama_lengkap',
                 'profiles.logo_sekolah',
                 'profiles.alamat_sekolah',
+                'profiles.nama_kepala_sekolah',
                 'profiles.tambahan_informasi',
                 'profiles.kelas_pengampu',
                 DB::raw('COUNT(laporan.id_laporan) as jumlah_kegiatan'),
                 DB::raw('SUM(ekuivalen) as jumlah_ekuivalen')
             )
-            ->where('profiles.id_user', $req['id_user'])
             ->where('laporan.id_user', $req['id_user'])
             ->where('laporan.id_sekolah', $req['id_sekolah'])
             ->groupBy(
                 'laporan.id_user',
                 'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'laporan.detail',
                 'kegiatan.id_kegiatan',
                 'kegiatan.kegiatan',
                 'sekolah.nama_sekolah',
                 'profiles.nama_lengkap',
                 'profiles.logo_sekolah',
                 'profiles.alamat_sekolah',
+                'profiles.nama_kepala_sekolah',
                 'profiles.tambahan_informasi',
                 'profiles.kelas_pengampu',
             )
-            ->orderBy('laporan.id_laporan', 'desc');
+            ->orderBy('laporan.id_laporan', 'ASC');
         $laporan->whereYear('tgl_transaksi', $request->year);
         $laporan->whereBetween('tgl_transaksi', [$start_date, $end_date]);
         $reports    = $laporan->get();
-        // $user       = $laporan->first();
+        $guru       = $laporan->first();
 
         $semester = $request->semester;
 
@@ -452,71 +966,71 @@ class ReportController extends Controller
             return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
         } else {
             // return view('print.laporan.semesteran', compact('reports', 'user', 'semester'));
-            $pdf = PDF::loadView('print.laporan.semesteran', compact('reports', 'user', 'semester'));
-            $pdf->setPaper('legal', 'potrait');
-            $pdf->save($fullFilePath);
+            // $pdf = PDF::loadView('print.laporan.semesteran', compact('reports', 'user', 'semester'));
+            // $pdf->setPaper('legal', 'potrait');
+            // $pdf->save($fullFilePath);
+
+            $namaLengkap = $guru->nama_lengkap;
+
+            $kelas      = $guru->kelas_pengampu;
+            $eachkelas  = explode(";", $kelas);
+
+            $table = '<table style="width: 50%;"><tr>';
+            $td = '<td style="width:50%;">';
+            $ul = '<ul>';
+            $no = 0;
+            $marginTop = 85;
+            $marginBot = 45;
+
+            foreach ($eachkelas as $item) :
+                $marginTop = $marginTop + 5;
+                $marginBot = $marginBot + 5;
+
+                if ($no == ($no % 4 == 0)) {
+                    $ul .= '</ul></td>';
+
+                    $ul .= $td . '<ul>';
+                    $marginTop = 90;
+                    $marginBot = 50;
+                }
+                $ul .= '<li>' . $item . '</li>';
+
+                $no++;
+                if ($no > 4) {
+                    $marginTop = 105;
+                    $marginBot = 65;
+                }
+            endforeach;
+
+            $ul .= '</ul>';
+            $td .= $ul . '</td>';
+            $table .= $td . '</tr></table>';
+
+            $mpdf = new \Mpdf\Mpdf();
+
+            $filename   = 'laporan-semesteran' . $namaLengkap . '.pdf';
+            $mpdf       = new \Mpdf\Mpdf([
+                'margin_left'   => 10,
+                'margin_right'  => 10,
+                'margin_top'    => $marginTop,
+                'margin_bottom' => $marginBot,
+                'margin_header' => 10,
+                'margin_footer' => 10,
+            ]);
+
+            $html   = View::make('print.laporan.semesteran')->with('reports', $reports);
+            $html   = $html->render();
+
+            $this->setHeaderFooter($mpdf, $guru, $table, 'semester', $semester);
+
+            $mpdf->autoPageBreak = true;
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($fullFilePath, 'F');
 
             return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
         }
     }
 
-    public function getReportByYear(Request $request){
-        $req['id_sekolah']      = $request->id_sekolah;
-        $req['id_user']         = $request->id_user;
-
-        $validator = Validator::make($req, [
-            'id_sekolah'    => 'required|int|exists:sekolah',
-            'id_user'       => 'required|int|exists:users',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
-        }
-
-        $laporan = DB::table('laporan')
-            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
-            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
-            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
-            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
-            ->select(
-                'laporan.id_user',
-                'laporan.id_kegiatan',
-                'kegiatan.id_kegiatan',
-                'kegiatan.kegiatan',
-                'sekolah.nama_sekolah',
-                'profiles.nama_lengkap',
-                'profiles.logo_sekolah',
-                'profiles.alamat_sekolah',
-                'profiles.tambahan_informasi',
-                'profiles.kelas_pengampu',
-                DB::raw('COUNT(laporan.id_laporan) as jumlah_kegiatan'),
-                DB::raw('SUM(ekuivalen) as jumlah_ekuivalen')
-            )
-            ->where('profiles.id_user', $req['id_user'])
-            ->where('laporan.id_user', $req['id_user'])
-            ->where('laporan.id_sekolah', $req['id_sekolah'])
-            ->groupBy(
-                'laporan.id_user',
-                'laporan.id_kegiatan',
-                'kegiatan.id_kegiatan',
-                'kegiatan.kegiatan',
-                'sekolah.nama_sekolah',
-                'profiles.nama_lengkap',
-                'profiles.logo_sekolah',
-                'profiles.alamat_sekolah',
-                'profiles.tambahan_informasi',
-                'profiles.kelas_pengampu',
-            )
-            ->orderBy('laporan.id_laporan', 'desc');
-        $laporan->whereYear('tgl_transaksi', $request->year);
-        $reports = $laporan->get();
-
-        if ($reports->count() > 0) {
-            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $reports]);
-        } else {
-            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
-        }
-    }
     public function printReportByYear(Request $request)
     {
         $req['id_sekolah']      = $request->id_sekolah;
@@ -547,36 +1061,41 @@ class ReportController extends Controller
             ->select(
                 'laporan.id_user',
                 'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'laporan.detail',
                 'kegiatan.id_kegiatan',
                 'kegiatan.kegiatan',
                 'sekolah.nama_sekolah',
                 'profiles.nama_lengkap',
                 'profiles.logo_sekolah',
                 'profiles.alamat_sekolah',
+                'profiles.nama_kepala_sekolah',
                 'profiles.tambahan_informasi',
                 'profiles.kelas_pengampu',
                 DB::raw('COUNT(laporan.id_laporan) as jumlah_kegiatan'),
                 DB::raw('SUM(ekuivalen) as jumlah_ekuivalen')
             )
-            ->where('profiles.id_user', $req['id_user'])
             ->where('laporan.id_user', $req['id_user'])
             ->where('laporan.id_sekolah', $req['id_sekolah'])
             ->groupBy(
                 'laporan.id_user',
                 'laporan.id_kegiatan',
+                'laporan.tgl_transaksi',
+                'laporan.detail',
                 'kegiatan.id_kegiatan',
                 'kegiatan.kegiatan',
                 'sekolah.nama_sekolah',
                 'profiles.nama_lengkap',
                 'profiles.logo_sekolah',
                 'profiles.alamat_sekolah',
+                'profiles.nama_kepala_sekolah',
                 'profiles.tambahan_informasi',
                 'profiles.kelas_pengampu',
             )
-            ->orderBy('laporan.id_laporan', 'desc');
+            ->orderBy('laporan.id_laporan', 'ASC');
         $laporan->whereYear('tgl_transaksi', $request->year);
         $reports    = $laporan->get();
-        // $user       = $laporan->first();
+        $guru       = $laporan->first();
 
         $year = $request->year;
 
@@ -584,85 +1103,67 @@ class ReportController extends Controller
             return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
         } else {
             // return view('print.laporan.tahunan', compact('reports', 'user', 'year'));
-            $pdf = PDF::loadView('print.laporan.tahunan', compact('reports', 'user', 'year'));
-            $pdf->setPaper('legal', 'potrait');
-            $pdf->save($fullFilePath);
+            // $pdf = PDF::loadView('print.laporan.tahunan', compact('reports', 'user', 'year'));
+            // $pdf->setPaper('legal', 'potrait');
+            // $pdf->save($fullFilePath);
 
-            return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
-        }
-    }
+            $namaLengkap = $guru->nama_lengkap;
 
-    public function printReportByMonth(Request $request){
-        $req['id_sekolah']      = $request->id_sekolah;
-        $req['id_user']         = $request->id_user;
+            // $kelas       = $guru->user->profile->kelas_pengampu;
+            $kelas      = $guru->kelas_pengampu;
+            $eachkelas  = explode(";", $kelas);
 
-        $validator = Validator::make($req, [
-            'id_sekolah'    => 'required|int|exists:sekolah',
-            'id_user'       => 'required|int|exists:users',
-        ]);
+            $table = '<table style="width: 50%;"><tr>';
+            $td = '<td style="width:50%;">';
+            $ul = '<ul>';
+            $no = 0;
+            $marginTop = 85;
+            $marginBot = 45;
 
-        if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
-        }
+            foreach ($eachkelas as $item) :
+                $marginTop = $marginTop + 5;
+                $marginBot = $marginBot + 5;
 
-        $user           = DB::table('v_profiles')->where('id_user', $req['id_user'])->first();
-        $filePath       = 'laporan/' . $user->name . '/bulanan';
-        $fullFilePath   = 'laporan/' . $user->name . '/bulanan/LaporanBulanan_' . $user->nama_lengkap .  '.pdf';
-        $isExist        = File::exists($filePath);
-        if ($isExist == false) {
-            File::makeDirectory($filePath, 0777, true, true);
-        }
+                if ($no == ($no % 4 == 0)) {
+                    $ul .= '</ul></td>';
 
-        $laporan = DB::table('laporan')
-            ->Join('kegiatan', 'laporan.id_kegiatan', '=', 'kegiatan.id_kegiatan')
-            ->Join('sekolah', 'laporan.id_sekolah', '=', 'sekolah.id_sekolah')
-            ->Join('users', 'laporan.id_user', '=', 'users.id_user')
-            ->Join('profiles', 'users.id_user', '=', 'profiles.id_user')
-            ->select(
-                'laporan.id_user',
-                'laporan.id_kegiatan',
-                'laporan.tgl_transaksi',
-                'kegiatan.id_kegiatan',
-                'kegiatan.kegiatan',
-                'sekolah.nama_sekolah',
-                'profiles.nama_lengkap',
-                'profiles.logo_sekolah',
-                'profiles.alamat_sekolah',
-                'profiles.tambahan_informasi',
-                'profiles.kelas_pengampu',
-                DB::raw('COUNT(laporan.id_laporan) as jumlah_kegiatan'),
-                DB::raw('SUM(ekuivalen) as jumlah_ekuivalen')
-            )
-            ->where('profiles.id_user', $req['id_user'])
-            ->where('laporan.id_user', $req['id_user'])
-            ->where('laporan.id_sekolah', $req['id_sekolah'])
-            ->groupBy(
-                'laporan.id_user',
-                'laporan.id_kegiatan',
-                'laporan.tgl_transaksi',
-                'kegiatan.id_kegiatan',
-                'kegiatan.kegiatan',
-                'sekolah.nama_sekolah',
-                'profiles.nama_lengkap',
-                'profiles.logo_sekolah',
-                'profiles.alamat_sekolah',
-                'profiles.tambahan_informasi',
-                'profiles.kelas_pengampu',
-            )
-            ->orderBy('laporan.id_laporan', 'desc');
-        $laporan->whereYear('tgl_transaksi', $request->year);
-        $laporan->whereMonth('tgl_transaksi', $request->month);
-        $reports = $laporan->get();
-        // $user = $laporan->first();
-        // dd($user);
+                    $ul .= $td . '<ul>';
+                    $marginTop = 90;
+                    $marginBot = 50;
+                }
+                $ul .= '<li>' . $item . '</li>';
 
-        if ($reports->count() < 1) {
-            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan', 'data' => []]);
-        } else {
-            // return view('print.laporan.bulanan', compact('reports', 'user'));
-            $pdf = PDF::loadView('print.laporan.bulanan', compact('reports', 'user'));
-            $pdf->setPaper('legal', 'potrait');
-            $pdf->save($fullFilePath);
+                $no++;
+                if ($no > 4) {
+                    $marginTop = 105;
+                    $marginBot = 65;
+                }
+            endforeach;
+
+            $ul .= '</ul>';
+            $td .= $ul . '</td>';
+            $table .= $td . '</tr></table>';
+
+            $mpdf = new \Mpdf\Mpdf();
+
+            $filename   = 'laporan-tahunan' . $namaLengkap . '.pdf';
+            $mpdf       = new \Mpdf\Mpdf([
+                'margin_left'   => 10,
+                'margin_right'  => 10,
+                'margin_top'    => $marginTop,
+                'margin_bottom' => $marginBot,
+                'margin_header' => 10,
+                'margin_footer' => 10,
+            ]);
+
+            $html   = View::make('print.laporan.tahunan')->with('reports', $reports);
+            $html   = $html->render();
+
+            $this->setHeaderFooter($mpdf, $guru, $table, 'year', $year);
+
+            $mpdf->autoPageBreak = true;
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($fullFilePath, 'F');
 
             return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $fullFilePath]);
         }
