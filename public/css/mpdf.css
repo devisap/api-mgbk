@@ -1,0 +1,140 @@
+.w-100 {
+    width: 100%;
+}
+
+.p-min {
+    padding: 0.2em;
+}
+
+.valign-middle {
+    vertical-align: middle;
+}
+
+.p-max {
+    padding: 1em;
+}
+
+.mb-max {
+    margin-bottom: 2em;
+}
+
+.border-collapse {
+    border-collapse: collapse;
+}
+
+.border {
+    border: 1px solid black;
+}
+
+.border-right {
+    border-right: 1px solid black;
+}
+
+.border-top {
+    border-top: 1px solid black;
+}
+
+.border-bottom {
+    border-bottom: 1px solid black;
+}
+
+.text-title {
+    font-size: 24px;
+}
+
+.text-regular {
+    font-weight: 400;
+}
+
+.text-align-left {
+    text-align: left;
+}
+
+.text-align-center {
+    text-align: center;
+}
+
+.text-align-justify {
+    text-align: justify;
+}
+
+ol {
+    list-style: none;
+    counter-reset: my-awesome-counter;
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+}
+ol li {
+    counter-increment: my-awesome-counter;
+    display: flex;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+ol li::before {
+    content: counter(my-awesome-counter) ".";
+    font-weight: bold;
+    font-size: 1rem;
+    margin-right: 0.5rem;
+    line-height: 1;
+}
+
+.custom-columns {
+    width: 200px;
+    border: 0px solid black;
+    -moz-column-count: 3;
+    -moz-column-gap: 20px;
+    -webkit-column-count: 2;
+    -webkit-column-gap: 20px;
+    column-count: 3;
+    column-gap: 20px;
+}
+
+/* @page { margin-top: 120px; margin-bottom: 300px } */
+/* header { position: fixed; left: 0px; top: -90px; right: 0px; height: 150px; text-align: center; } */
+/* @page {
+    margin: 100px 25px;
+} */
+
+@media print {
+    html,
+    body {
+        height: 100vh;
+        overflow: hidden;
+    }
+}
+
+header {
+    position: fixed;
+    top: -60px;
+    left: 0px;
+    right: 0px;
+    height: 50px;
+}
+#footer {
+    position: fixed;
+    bottom: -60px;
+    left: 0px;
+    right: 0px;
+    height: 50px;
+}
+
+.pos-right {
+    right: 0;
+}
+.absolute {
+    position: absolute;
+}
+
+main:last-child {
+    page-break-after: auto;
+}
+
+.main-content {
+    margin-top: 300px;
+}
+
+.box-decoration-break {
+    box-decoration-break: clone;
+}
