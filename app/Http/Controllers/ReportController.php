@@ -29,8 +29,7 @@ class ReportController extends Controller
             'tgl_transaksi' => 'required|date',
             'detail'        => 'required',
             'upload_doc_1'  => 'required|file|mimes:pdf,png,jpg,bmp|max:2048',
-            'upload_doc_2'  => 'nullable|file|mimes:pdf,png,jpg,bmp|max:2048',
-            'upload_doc_3'  => 'nullable|file|mimes:pdf,png,jpg,bmp|max:2048',
+            'upload_doc_2'  => 'nullable',
         ]);
 
         if ($validator->fails()) {
@@ -44,17 +43,11 @@ class ReportController extends Controller
             $req['upload_doc_1'] = $nama_doc_1;
         }
 
-        if ($request->hasFile('upload_doc_2')) {
-            $nama_doc_2 = time() . '_' . $request->file('upload_doc_2')->getClientOriginalName();
-            $request->file('upload_doc_2')->move('upload/doc_2/' . $request->id_user, $nama_doc_2);
-            $req['upload_doc_2'] = $nama_doc_2;
-        }
-
-        if ($request->hasFile('upload_doc_3')) {
-            $nama_doc_3 = time() . '_' . $request->file('upload_doc_3')->getClientOriginalName();
-            $request->file('upload_doc_3')->move('upload/doc_3/' . $request->id_user, $nama_doc_3);
-            $req['upload_doc_3'] = $nama_doc_3;
-        }
+        // if ($request->hasFile('upload_doc_2')) {
+        //     $nama_doc_2 = time() . '_' . $request->file('upload_doc_2')->getClientOriginalName();
+        //     $request->file('upload_doc_2')->move('upload/doc_2/' . $request->id_user, $nama_doc_2);
+        //     $req['upload_doc_2'] = $nama_doc_2;
+        // }
 
         // setUp Data
         $req['created_at'] = date('Y-m-d H:i:s');
@@ -62,6 +55,18 @@ class ReportController extends Controller
         DB::table('laporan')->insert($req);
 
         return response()->json(['status' => true, 'message' => 'Data berhasil ditambahkan', 'data' => null]);
+    }
+
+    public function destroyReport(Request $request)
+    {
+        $report = DB::table('laporan')->where('id_laporan', $request->id_laporan)->get();
+        $delete = DB::table('laporan')->where('id_laporan', $request->id_laporan)->delete();
+
+        if ($report->count() > 0) {
+            return response()->json(['status' => true, 'message' => 'Data berhasil dihapus', 'data' => $report]);
+        } else {
+            return response()->json(['status' => false, 'message' => 'Data gagal dihapus', 'data' => []]);
+        }
     }
 
     public function loadWeeks(Request $request)
@@ -364,8 +369,9 @@ class ReportController extends Controller
         return $bulan[(int)$pecahkan[1]];
     }
 
-    private function setHeaderFooter($mpdf, $guru, $table, $printBy, $reportTime = null)
+    private function setHeaderFooter($mpdf, $guru, $table, $printBy, $reportTime = null, $withHeader)
     {
+        $printTime  = $this->tgl_indo(date("Y-m-d"));
 
         if ($printBy == 'date') {
             $reportFor  = 'Tanggal laporan';
@@ -386,76 +392,146 @@ class ReportController extends Controller
 
         $stylesheet = file_get_contents(public_path('css/mpdf.css'));
         $mpdf->WriteHTML($stylesheet, 1);
-        $mpdf->SetHTMLHeader('
-        <table class="border w-100 p-max mb-max valign-middle">
-            <tr>
-                <th>
-                    <img src="https://api-mgbk.bgskr-project.my.id/upload/logoSekolah/' . $guru->logo_sekolah . '" width="80" height="80">
-                </th>
-                <th>
-                    <span class="text-title">' . $guru->nama_sekolah . ' </span><br>
-                    <span class="text-regular">' . $guru->alamat_sekolah . '</span><br>
-                    <span class="text-regular">' . $guru->tambahan_informasi . '</span><br>
-                </th>
-            </tr>
-        </table>
 
-        <table class="mb-max">
-            <tr>
-                <th class="text-align-left" style="width:30%;">
-                    Nama Guru
-                </th>
-                <td>
-                    :  ' . $guru->nama_lengkap . '
-                </td>
-            </tr>
-            <tr>
-                <th class="text-align-left" style="width:30%;">
-                    Kelas yang diampuh
-                </th>
-                <td>
-                    : 
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2"> 
-                    ' . $table . '
-                </td>
-            </tr>
-            <tr>
-                <th class="text-align-left" style="width:30%;">
-                    ' . $reportFor . '
-                </th>
-                <td>
-                    : ' . $reportTime . '
-                </td>
-            </tr>
-        </table>
+        if ($withHeader == 1) {
+            // dengan header
+            $mpdf->SetHTMLHeader('
+            <table class="border w-100 p-max mb-max valign-middle">
+                <tr>
+                    <th>
+                        <img src="https://api-mgbk.bgskr-project.my.id/upload/logoSekolah/' . $guru->logo_sekolah . '" width="80" height="80">
+                    </th>
+                    <th>
+                        <span class="text-title">' . $guru->nama_sekolah . ' </span><br>
+                        <span class="text-regular">' . $guru->alamat_sekolah . '</span><br>
+                        <span class="text-regular">' . $guru->tambahan_informasi . '</span><br>
+                    </th>
+                </tr>
+            </table>
 
-        <p>
-            Berikut detail laporan dari Guru BK yang bersangkutan :
-        </p>');
+            <table class="mb-max">
+                <tr>
+                    <th class="text-align-left" style="width:30%;">
+                        Nama Guru
+                    </th>
+                    <td>
+                        :  ' . $guru->nama_lengkap . '
+                    </td>
+                </tr>
+                <tr>
+                    <th class="text-align-left" style="width:30%;">
+                        Kelas yang diampuh
+                    </th>
+                    <td>
+                        : 
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"> 
+                        ' . $table . '
+                    </td>
+                </tr>
+                <tr>
+                    <th class="text-align-left" style="width:30%;">
+                        ' . $reportFor . '
+                    </th>
+                    <td>
+                        : ' . $reportTime . '
+                    </td>
+                </tr>
+                <tr>
+                    <th class="text-align-left" style="width:30%;">
+                        Tanggal cetak laporan
+                    </th>
+                    <td>
+                        : ' . $printTime . '
+                    </td>
+                </tr>
+            </table>
+
+            <p>
+                Berikut detail laporan dari Guru BK yang bersangkutan :
+            </p>');
+        } else {
+            // tanpa header
+            $mpdf->SetHTMLHeader('
+            <table class="mb-max">
+                <tr>
+                    <th class="text-align-left" style="width:30%;">
+                        Nama Guru
+                    </th>
+                    <td>
+                        :  ' . $guru->nama_lengkap . '
+                    </td>
+                </tr>
+                <tr>
+                    <th class="text-align-left" style="width:30%;">
+                        Kelas yang diampuh
+                    </th>
+                    <td>
+                        : 
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"> 
+                        ' . $table . '
+                    </td>
+                </tr>
+                <tr>
+                    <th class="text-align-left" style="width:30%;">
+                        ' . $reportFor . '
+                    </th>
+                    <td>
+                        : ' . $reportTime . '
+                    </td>
+                </tr>
+                <tr>
+                    <th class="text-align-left" style="width:30%;">
+                        Tanggal cetak laporan
+                    </th>
+                    <td>
+                        : ' . $printTime . '
+                    </td>
+                </tr>
+            </table>
+
+            <p>
+                Berikut detail laporan dari Guru BK yang bersangkutan :
+            </p>');
+        }
+
         $mpdf->SetHTMLFooter('
         <table class="table-layout-fixed w-100">
             <tr>
-                <td style="width:50%;"></td>
-                <td style="width:50%">
+                <td style="width:50%;">
                 <table class="border-1 border-collapse table-layout-fixed" style="width: 400px;">
                     <tr>
-                        <th class="border-1 p-min w-50">Dibuat</th>
                         <th class="border-1 p-min w-50">Mengetahui</th>
                     </tr>
                     <tr class="text-align-center">
                         <td class="border-1 p-min"><img style="visibility: hidden;" src="https://via.placeholder.com/100" width="100px" height="100px" /></td>
+                    </tr>
+                    <tr>
+                        <td class="border-1 p-min text-align-center">' . $guru->nama_kepala_sekolah . '</td>
+                    </tr>
+                    <tr>
+                        <td class="border-1 p-min text-align-center">Kepala Sekolah</td>
+                    </tr>
+                </table>
+                </td>
+                <td style="width:50%">
+                <table class="border-1 border-collapse table-layout-fixed" style="width: 400px;">
+                    <tr>
+                        <th class="border-1 p-min w-50">Dibuat</th>
+                    </tr>
+                    <tr class="text-align-center">
                         <td class="border-1 p-min"><img style="visibility: hidden;" src="https://via.placeholder.com/100" width="100px" height="100px" /></td>
                     </tr>
                     <tr>
                         <td class="border-1 p-min text-align-center">' . $guru->nama_lengkap . '</td>
-                        <td class="border-1 p-min text-align-center">' . $guru->nama_kepala_sekolah . '</td>
                     </tr>
                     <tr>
                         <td class="border-1 p-min text-align-center">Guru BK</td>
-                        <td class="border-1 p-min text-align-center">Kepala Sekolah</td>
                     </tr>
                 </table>
                 </td>
@@ -469,6 +545,7 @@ class ReportController extends Controller
         $req['tgl_transaksi']   = $tanggal;
         $req['id_sekolah']      = $request->id_sekolah;
         $req['id_user']         = $request->id_user;
+        $withHeader             = $request->withHeader;
 
         $validator = Validator::make($req, [
             'tgl_transaksi' => 'required|date',
@@ -555,7 +632,7 @@ class ReportController extends Controller
             $td = '<td style="width:50%;">';
             $ul = '<ul>';
             $no = 0;
-            $marginTop = 85;
+            $marginTop = 95;
             $marginBot = 45;
 
             foreach ($eachkelas as $item) :
@@ -597,7 +674,7 @@ class ReportController extends Controller
             $html   = View::make('print.laporan.harian')->with('reports', $reports);
             $html   = $html->render();
 
-            $this->setHeaderFooter($mpdf, $guru, $table, 'date');
+            $this->setHeaderFooter($mpdf, $guru, $table, 'date', null, $withHeader);
 
             $mpdf->autoPageBreak = true;
             $mpdf->WriteHTML($html);
@@ -611,6 +688,7 @@ class ReportController extends Controller
     {
         $req['id_sekolah']      = $request->id_sekolah;
         $req['id_user']         = $request->id_user;
+        $withHeader             = $request->withHeader;
 
         $validator = Validator::make($req, [
             'id_sekolah'    => 'required|int|exists:sekolah',
@@ -696,7 +774,7 @@ class ReportController extends Controller
             $td = '<td style="width:50%;">';
             $ul = '<ul>';
             $no = 0;
-            $marginTop = 85;
+            $marginTop = 95;
             $marginBot = 45;
 
             foreach ($eachkelas as $item) :
@@ -738,7 +816,7 @@ class ReportController extends Controller
             $html   = View::make('print.laporan.mingguan')->with('reports', $reports);
             $html   = $html->render();
 
-            $this->setHeaderFooter($mpdf, $guru, $table, 'week', $week);
+            $this->setHeaderFooter($mpdf, $guru, $table, 'week', $week, $withHeader);
 
             $mpdf->autoPageBreak = true;
             $mpdf->WriteHTML($html);
@@ -752,6 +830,7 @@ class ReportController extends Controller
     {
         $req['id_sekolah']      = $request->id_sekolah;
         $req['id_user']         = $request->id_user;
+        $withHeader             = $request->withHeader;
 
         $validator = Validator::make($req, [
             'id_sekolah'    => 'required|int|exists:sekolah',
@@ -833,7 +912,7 @@ class ReportController extends Controller
             $td = '<td style="width:50%;">';
             $ul = '<ul>';
             $no = 0;
-            $marginTop = 85;
+            $marginTop = 95;
             $marginBot = 45;
 
             foreach ($eachkelas as $item) :
@@ -875,7 +954,7 @@ class ReportController extends Controller
             $html   = View::make('print.laporan.bulanan')->with('reports', $reports);
             $html   = $html->render();
 
-            $this->setHeaderFooter($mpdf, $guru, $table, 'month');
+            $this->setHeaderFooter($mpdf, $guru, $table, 'month', null, $withHeader);
 
             $mpdf->autoPageBreak = true;
             $mpdf->WriteHTML($html);
@@ -889,6 +968,7 @@ class ReportController extends Controller
     {
         $req['id_sekolah']      = $request->id_sekolah;
         $req['id_user']         = $request->id_user;
+        $withHeader             = $request->withHeader;
 
         $validator = Validator::make($req, [
             'id_sekolah'    => 'required|int|exists:sekolah',
@@ -979,7 +1059,7 @@ class ReportController extends Controller
             $td = '<td style="width:50%;">';
             $ul = '<ul>';
             $no = 0;
-            $marginTop = 85;
+            $marginTop = 95;
             $marginBot = 45;
 
             foreach ($eachkelas as $item) :
@@ -1021,7 +1101,7 @@ class ReportController extends Controller
             $html   = View::make('print.laporan.semesteran')->with('reports', $reports);
             $html   = $html->render();
 
-            $this->setHeaderFooter($mpdf, $guru, $table, 'semester', $semester);
+            $this->setHeaderFooter($mpdf, $guru, $table, 'semester', $semester, $withHeader);
 
             $mpdf->autoPageBreak = true;
             $mpdf->WriteHTML($html);
@@ -1035,6 +1115,7 @@ class ReportController extends Controller
     {
         $req['id_sekolah']      = $request->id_sekolah;
         $req['id_user']         = $request->id_user;
+        $withHeader             = $request->withHeader;
 
         $validator = Validator::make($req, [
             'id_sekolah'    => 'required|int|exists:sekolah',
@@ -1117,7 +1198,7 @@ class ReportController extends Controller
             $td = '<td style="width:50%;">';
             $ul = '<ul>';
             $no = 0;
-            $marginTop = 85;
+            $marginTop = 95;
             $marginBot = 45;
 
             foreach ($eachkelas as $item) :
@@ -1159,7 +1240,7 @@ class ReportController extends Controller
             $html   = View::make('print.laporan.tahunan')->with('reports', $reports);
             $html   = $html->render();
 
-            $this->setHeaderFooter($mpdf, $guru, $table, 'year', $year);
+            $this->setHeaderFooter($mpdf, $guru, $table, 'year', $year, $withHeader);
 
             $mpdf->autoPageBreak = true;
             $mpdf->WriteHTML($html);

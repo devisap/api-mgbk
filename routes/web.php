@@ -52,6 +52,7 @@ $router->get('/report/by-week', 'ReportController@getReportByWeek');
 $router->get('/report/by-month', 'ReportController@getReportByMonth');
 $router->get('/report/by-semester', 'ReportController@getReportBySemester');
 $router->get('/report/by-year', 'ReportController@getReportByYear');
+$router->post('/report/destroy', 'ReportController@destroyReport');
 
 // -- Print Rport -- //
 $router->get('/print-report/by-date/{tanggal}', 'ReportController@printReportByDate');
