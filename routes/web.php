@@ -43,8 +43,6 @@ $router->get('/activity', 'ActivityController@getList');
 // -- POST METHOD --
 $router->post('/activity', 'ActivityController@store');
 
-// report
-// -- GET METHOD --
 
 $router->get('report/load-weeks', 'ReportController@loadWeeks');
 
@@ -54,6 +52,7 @@ $router->get('/report/by-week', 'ReportController@getReportByWeek');
 $router->get('/report/by-month', 'ReportController@getReportByMonth');
 $router->get('/report/by-semester', 'ReportController@getReportBySemester');
 $router->get('/report/by-year', 'ReportController@getReportByYear');
+$router->post('/report/destroy', 'ReportController@destroyReport');
 
 // -- Print Rport -- //
 $router->get('/print-report/by-date/{tanggal}', 'ReportController@printReportByDate');
@@ -63,6 +62,3 @@ $router->get('/print-report/by-semester', 'ReportController@printReportBySemeste
 $router->get('/print-report/by-year', 'ReportController@printReportByYear');
 // -- POST METHOD --
 $router->post('/report', 'ReportController@store');
-
-// Data Master
-$router->get('data-master/getYears', 'DataMasterController@getYears');
