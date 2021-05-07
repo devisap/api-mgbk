@@ -71,8 +71,7 @@ class ReportController extends Controller
 
     public function loadWeeks(Request $request)
     {
-        $weeks = DB::table('weeks')->where('year', $request->get('year'))
-            ->pluck('week', 'id_week');
+        $weeks = DB::table('weeks')->where('year', $request->get('year'))->get();
 
         return response()->json($weeks);
     }
