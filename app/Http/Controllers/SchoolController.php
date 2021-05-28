@@ -16,19 +16,20 @@ class SchoolController extends Controller
      * @param  Request  $request
      * @return Response
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $req = $request->all();
 
         $validator = Validator::make($req, [
             'nama_sekolah' => 'required'
         ]);
-        
-        if($validator->fails()){
+
+        if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
         }
 
         // setUp Data
-        $req['is_verified']= '0';
+        $req['is_verified'] = '0';
         $req['created_at'] = date('Y-m-d H:i:s');
         $req['updated_at'] = date('Y-m-d H:i:s');
         DB::table('sekolah')->insert($req);
@@ -36,9 +37,9 @@ class SchoolController extends Controller
         return response()->json(['status' => true, 'message' => 'Data berhasil ditambahkan', 'data' => null]);
     }
 
-    public function getList(){
-        $listData = DB::table('sekolah')->get();
+    public function getList()
+    {
+        $listData = DB::table('sekolah')->orderBy('nama_sekolah', 'asc')->get();
         return response()->json(['status' => true, 'message' => 'Data berhasil ditemukan', 'data' => $listData]);
     }
-
 }
