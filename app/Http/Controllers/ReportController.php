@@ -385,7 +385,7 @@ class ReportController extends Controller
             <table class="border w-100 p-max mb-max valign-middle">
                 <tr>
                     <th>
-                        <img src="https://api-mgbk.bgskr-project.my.id/upload/logoSekolah/' . $guru->logo_sekolah . '" width="80" height="80">
+                        <img src="https://api.mgbkkotamalang.my.id/upload/logoSekolah/' . $guru->logo_sekolah . '" width="80" height="80">
                     </th>
                     <th>
                         <span class="text-title">' . $guru->nama_sekolah . ' </span><br>
