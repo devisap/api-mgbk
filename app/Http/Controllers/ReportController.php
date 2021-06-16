@@ -35,7 +35,7 @@ class ReportController extends Controller
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
         }
-        
+
         // setUp Data
         $req['created_at'] = date('Y-m-d H:i:s');
         $req['updated_at'] = date('Y-m-d H:i:s');
@@ -406,7 +406,7 @@ class ReportController extends Controller
                 </tr>
                 <tr>
                     <th class="text-align-left" style="width:30%;">
-                        Kelas yang diampuh
+                        Kelas diampu
                     </th>
                     <td>
                         : 
@@ -452,7 +452,7 @@ class ReportController extends Controller
                 </tr>
                 <tr>
                     <th class="text-align-left" style="width:30%;">
-                        Kelas yang diampuh
+                        Kelas diampu
                     </th>
                     <td>
                         : 
