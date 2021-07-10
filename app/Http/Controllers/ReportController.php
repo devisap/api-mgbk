@@ -28,13 +28,22 @@ class ReportController extends Controller
             'id_kegiatan'   => 'required|int|exists:kegiatan',
             'tgl_transaksi' => 'required|date',
             'detail'        => 'required',
-            'upload_doc_1'  => 'required',
+            'upload_doc_1'  => 'required|file|mimes:pdf,png,jpg,bmp|max:2048',
             'upload_doc_2'  => 'nullable',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => $validator->errors()->first(), 'data' => null]);
         }
+        
+        if ($request->hasFile('upload_doc_1')) {
+            $nama_doc_1 = time() . '_' . $request->file('upload_doc_1')->getClientOriginalName();
+
+            $request->file('upload_doc_1')->move('upload/doc_1/' . $request->id_user, $nama_doc_1);
+            $req['upload_doc_1'] = $nama_doc_1;
+        }
+
+
 
         // setUp Data
         $req['created_at'] = date('Y-m-d H:i:s');
